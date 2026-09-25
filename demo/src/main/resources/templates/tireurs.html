@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Stand de tir</title>
+</head>
+<body>
+
+    <h1>Stand de tir</h1>
+    <h2>Tireurs :</h2>
+
+    <ul>
+        <li th:each="tireur : ${shooters}">
+            <span th:text="${tireur.firstName}"></span>
+            <span th:text="${tireur.lastName}"></span>
+        </li>
+    </ul>
+
+</body>
+</html>
