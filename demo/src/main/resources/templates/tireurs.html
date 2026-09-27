@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -7,12 +8,16 @@
 <body>
 
     <h1>Stand de tir</h1>
+
+    <a th:href="@{/tireurs/ajouter}">+ Ajouter un tireur</a>
+
     <h2>Tireurs :</h2>
 
     <ul>
         <li th:each="tireur : ${shooters}">
             <span th:text="${tireur.firstName}"></span>
             <span th:text="${tireur.lastName}"></span>
+            <a th:href="@{/tireurs/supprimer/{id}(id=${tireur.id})}">Supprimer</a>
         </li>
     </ul>
 

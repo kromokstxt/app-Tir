@@ -5,6 +5,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 import java.util.ArrayList;
@@ -35,8 +36,17 @@ public class ShooterController {
         shooters.add(new Shooter(nextId++, firstName, lastName));
         return "redirect:/tireurs";
     }
+    @GetMapping("/tireurs/supprimer/{id}")
+    public String deleteShooter(@PathVariable int id) {
+        shooters.removeIf(tireur -> tireur.getId() == id);
+        return "redirect:/tireurs";
+    }
 }
+    
 
+    
+
+    
 
 
 
