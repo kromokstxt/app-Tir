@@ -18,8 +18,8 @@ public class ShooterController {
     private int nextId = 1;
     
     public ShooterController(){
-        shooters.add(new Shooter(nextId++, "xxxx", "yyy"));
-        shooters.add(new Shooter(nextId++, "xxxx", "yyy"));
+        shooters.add(new Shooter(nextId++, "xxxx", "yyy", 0));
+        shooters.add(new Shooter(nextId++, "xxxx", "yyy", 0));
     }
     @GetMapping("/tireurs")
     public String ListShooters(Model model) {
@@ -32,8 +32,8 @@ public class ShooterController {
     }
 
     @PostMapping("/tireurs/ajouter")
-    public String addshooter (@RequestParam String firstName, @RequestParam String lastName) {
-        shooters.add(new Shooter(nextId++, firstName, lastName));
+    public String addshooter (@RequestParam String firstName, @RequestParam String lastName, @RequestParam(defaultValue = "0") int clubId) {
+        shooters.add(new Shooter(nextId++, firstName, lastName, clubId));
         return "redirect:/tireurs";
     }
     @GetMapping("/tireurs/supprimer/{id}")
