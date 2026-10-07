@@ -14,15 +14,17 @@ import java.util.List;
 @Controller
 public class ShooterController {
 
+    private final Club club = new Club(1, "Société de tir La militaire, Villarepos");
     private  List<Shooter> shooters = new ArrayList<>();
     private int nextId = 1;
     
     public ShooterController(){
-        shooters.add(new Shooter(nextId++, "xxxx", "yyy", 0));
-        shooters.add(new Shooter(nextId++, "xxxx", "yyy", 0));
+        shooters.add(new Shooter(nextId++, "xxxx", "yyy", club.getId()));
+        shooters.add(new Shooter(nextId++, "xxxx", "yyy", club.getId()));
     }
     @GetMapping("/tireurs")
     public String ListShooters(Model model) {
+        model.addAttribute("club", club);
         model.addAttribute("shooters", shooters);
         return "tireurs";
     }
@@ -32,8 +34,8 @@ public class ShooterController {
     }
 
     @PostMapping("/tireurs/ajouter")
-    public String addshooter (@RequestParam String firstName, @RequestParam String lastName, @RequestParam(defaultValue = "0") int clubId) {
-        shooters.add(new Shooter(nextId++, firstName, lastName, clubId));
+    public String addshooter (@RequestParam String firstName, @RequestParam String lastName) {
+        shooters.add(new Shooter(nextId++, firstName, lastName, club.getId()));
         return "redirect:/tireurs";
     }
     @GetMapping("/tireurs/supprimer/{id}")
