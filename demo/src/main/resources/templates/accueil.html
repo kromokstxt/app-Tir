@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil</title>
+</head>
+<body>
+
+    <h1 th:text="${club.nom}">Stand de tir</h1>
+
+    <h2>Menu :</h2>
+
+    <ul>
+        <li><a th:href="@{/tireurs}">Tireurs</a></li>
+        <li>Armes (bientôt)</li>
+        <li>Licences (bientôt)</li>
+        <li>Saisons (bientôt)</li>
+        <li>Séances (bientôt)</li>
+        <li>Résultats (bientôt)</li>
+        <li>Classement (bientôt)</li>
+        <li>Comité (bientôt)</li>
+    </ul>
+
+</body>
+</html>

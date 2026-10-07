@@ -14,11 +14,12 @@ import java.util.List;
 @Controller
 public class ShooterController {
 
-    private final Club club = new Club(1, "Société de tir La militaire, Villarepos");
+    private final Club club;
     private  List<Shooter> shooters = new ArrayList<>();
     private int nextId = 1;
     
-    public ShooterController(){
+    public ShooterController(Club club){
+        this.club = club;
         shooters.add(new Shooter(nextId++, "xxxx", "yyy", club.getId()));
         shooters.add(new Shooter(nextId++, "xxxx", "yyy", club.getId()));
     }
