@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultats</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${admin} ? 'Résultats :' : 'Mes résultats :'">Résultats :</h2>
+
+    <p>Un résultat se rattache à une séance et à une catégorie de tir.</p>
+    <a th:href="@{/resultats/ajouter}">+ Ajouter un résultat</a>
+
+    <ul>
+        <li th:each="resultat : ${resultats}">
+            <strong th:text="${resultat.score}"></strong> points le
+            <span th:text="${resultat.date}"></span>
+            en <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
+            — séance <span th:text="${@clubDonnees.nomSeance(resultat.seanceId)}"></span>
+            <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}">Modifier</a>
+            <form th:action="@{/resultats/{id}/supprimer(id=${resultat.id})}" method="post" style="display:inline">
+                <button type="submit">Supprimer</button>
+            </form>
+        </li>
+    </ul>
+
+</body>
+</html>

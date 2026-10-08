@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Mon profil</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2>Mon profil</h2>
+
+    <p>Prénom : <span th:text="${moi.firstName}"></span></p>
+    <p>Nom : <span th:text="${moi.lastName}"></span></p>
+    <p>Nom d'utilisateur : <span th:text="${moi.username}"></span></p>
+
+    <a th:href="@{/profil/modifier}">Modifier mon profil</a>
+
+</body>
+</html>

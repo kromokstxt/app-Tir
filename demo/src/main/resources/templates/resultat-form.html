@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Résultat</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${resultat == null} ? 'Ajouter un résultat' : 'Modifier un résultat'">Résultat</h2>
+
+    <p th:if="${#lists.isEmpty(mesSeances) or #lists.isEmpty(@clubDonnees.categories)}">
+        Il faut d'abord une séance (page Séances) et une catégorie de tir (page Catégories).
+    </p>
+
+    <form th:unless="${#lists.isEmpty(mesSeances) or #lists.isEmpty(@clubDonnees.categories)}"
+          th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post">
+        <label>Score : <input type="number" name="score" th:value="${resultat?.score}" required></label><br>
+        <label>Date : <input type="date" name="date" th:value="${resultat?.date}" required></label><br>
+        <label>Séance :
+            <select name="seanceId">
+                <option th:each="s : ${mesSeances}" th:value="${s.id}" th:text="${@clubDonnees.nomSeance(s.id)}"
+                        th:selected="${resultat != null and s.id == resultat.seanceId}"></option>
+            </select>
+        </label><br>
+        <label>Catégorie :
+            <select name="categorieId">
+                <option th:each="c : ${@clubDonnees.categories}" th:value="${c.id}" th:text="${c.nom}"
+                        th:selected="${resultat != null and c.id == resultat.categorieId}"></option>
+            </select>
+        </label><br>
+        <button type="submit">Enregistrer</button>
+    </form>
+
+    <a th:href="@{/resultats}">← Résultats</a>
+
+</body>
+</html>

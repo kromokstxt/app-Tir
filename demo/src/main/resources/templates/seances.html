@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Séances</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${admin} ? 'Séances :' : 'Mes séances :'">Séances :</h2>
+
+    <p th:if="${#lists.isEmpty(@clubDonnees.saisons)}">Il faut d'abord qu'une saison existe (page Saisons).</p>
+    <a th:unless="${#lists.isEmpty(@clubDonnees.saisons)}" th:href="@{/seances/ajouter}">+ Ajouter une séance</a>
+
+    <ul>
+        <li th:each="seance : ${seances}">
+            <span th:text="${seance.date}"></span> –
+            <span th:text="${seance.type}"></span> à
+            <span th:text="${seance.lieu}"></span>
+            (saison <span th:text="${@clubDonnees.nomSaison(seance.saisonId)}"></span>)
+            <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(seance.tireurId)}"></span>
+            <a th:href="@{/seances/{id}/modifier(id=${seance.id})}">Modifier</a>
+            <form th:action="@{/seances/{id}/supprimer(id=${seance.id})}" method="post" style="display:inline">
+                <button type="submit">Supprimer</button>
+            </form>
+        </li>
+    </ul>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier mon profil</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2>Modifier mon profil</h2>
+
+    <form th:action="@{/profil/modifier}" method="post">
+        <label>Prénom : <input type="text" name="firstName" th:value="${moi.firstName}" required></label><br>
+        <label>Nom : <input type="text" name="lastName" th:value="${moi.lastName}" required></label><br>
+        <label>Nouveau mot de passe (vide = inchangé) : <input type="password" name="password"></label><br>
+        <button type="submit">Enregistrer</button>
+    </form>
+
+</body>
+</html>

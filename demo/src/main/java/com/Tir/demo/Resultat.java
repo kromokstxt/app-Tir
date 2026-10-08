@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class Resultat {
+public class Resultat implements Identifiable {
 
     private int id;
     private int score;

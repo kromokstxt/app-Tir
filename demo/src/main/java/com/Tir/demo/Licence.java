@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class Licence {
+public class Licence implements Identifiable {
 
     private int id;
     private String numero;

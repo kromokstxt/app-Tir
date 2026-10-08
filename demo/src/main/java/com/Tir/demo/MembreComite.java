@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class MembreComite {
+public class MembreComite implements Identifiable {
 
     private int id;
     private String prenom;

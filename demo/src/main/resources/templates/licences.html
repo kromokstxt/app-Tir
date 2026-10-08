@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Licences</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${admin} ? 'Licences :' : 'Mes licences :'">Licences :</h2>
+
+    <a th:href="@{/licences/ajouter}">+ Ajouter une licence</a>
+
+    <ul>
+        <li th:each="licence : ${licences}">
+            N° <span th:text="${licence.numero}"></span>,
+            valable jusqu'au <span th:text="${licence.dateValidite}"></span>
+            <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(licence.tireurId)}"></span>
+            <a th:href="@{/licences/{id}/modifier(id=${licence.id})}">Modifier</a>
+            <form th:action="@{/licences/{id}/supprimer(id=${licence.id})}" method="post" style="display:inline">
+                <button type="submit">Supprimer</button>
+            </form>
+        </li>
+    </ul>
+
+</body>
+</html>

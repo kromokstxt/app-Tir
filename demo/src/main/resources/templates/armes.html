@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Armes</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${admin} ? 'Armes :' : 'Mes armes :'">Armes :</h2>
+
+    <a th:href="@{/armes/ajouter}">+ Ajouter une arme</a>
+
+    <ul>
+        <li th:each="arme : ${armes}">
+            <span th:text="${arme.modele}"></span>
+            (<span th:text="${arme.categorie}"></span>)
+            <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(arme.tireurId)}"></span>
+            <a th:href="@{/armes/{id}/modifier(id=${arme.id})}">Modifier</a>
+            <form th:action="@{/armes/{id}/supprimer(id=${arme.id})}" method="post" style="display:inline">
+                <button type="submit">Supprimer</button>
+            </form>
+        </li>
+    </ul>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class Arme {
+public class Arme implements Identifiable {
 
     private int id;
     private String modele;
