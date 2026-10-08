@@ -31,14 +31,15 @@ public class ArmeController {
     @GetMapping("/ajouter")
     public String ajouterForm(Model model) {
         model.addAttribute("categories", Arme.CATEGORIES);
+        model.addAttribute("versions57", Arme.VERSIONS_57);
         return "arme-form";
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam String modele, @RequestParam String categorie,
+    public String ajouter(@RequestParam String categorie, @RequestParam(defaultValue = "") String version,
                           @RequestParam(required = false) Integer tireurId) {
-        verifierCategorie(categorie);
-        donnees.armes.add(new Arme(donnees.nouvelId(), modele, categorie, acces.proprietaire(tireurId)));
+        verifierCategorie(categorie, version);
+        donnees.armes.add(new Arme(donnees.nouvelId(), categorie, version, acces.proprietaire(tireurId)));
         return "redirect:/armes";
     }
 
@@ -48,15 +49,16 @@ public class ArmeController {
         acces.verifierProprietaire(arme.getTireurId());
         model.addAttribute("arme", arme);
         model.addAttribute("categories", Arme.CATEGORIES);
+        model.addAttribute("versions57", Arme.VERSIONS_57);
         return "arme-form";
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam String modele, @RequestParam String categorie,
+    public String modifier(@PathVariable int id, @RequestParam String categorie, @RequestParam(defaultValue = "") String version,
                            @RequestParam(required = false) Integer tireurId) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.armes, id).getTireurId());
-        verifierCategorie(categorie);
-        ClubDonnees.remplacer(donnees.armes, new Arme(id, modele, categorie, acces.proprietaire(tireurId)));
+        verifierCategorie(categorie, version);
+        ClubDonnees.remplacer(donnees.armes, new Arme(id, categorie, version, acces.proprietaire(tireurId)));
         return "redirect:/armes";
     }
 
@@ -67,9 +69,9 @@ public class ArmeController {
         return "redirect:/armes";
     }
 
-    private void verifierCategorie(String categorie) {
-        if (!Arme.CATEGORIES.contains(categorie)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Catégorie d'arme inconnue");
+    private void verifierCategorie(String categorie, String version) {
+        if (!Arme.valide(categorie, version)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Catégorie d'arme inconnue (Fas 57 : 02 ou 03)");
         }
     }
 }

@@ -2,7 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Résultat</title>
+    <script th:src="@{/cible.js}"></script>
 </head>
 <body>
 
@@ -10,40 +13,151 @@
 
     <h2 th:text="${resultat == null} ? 'Ajouter un résultat' : 'Modifier un résultat'">Résultat</h2>
 
-    <p th:if="${#lists.isEmpty(mesSeances) or #lists.isEmpty(@clubDonnees.categories)}">
-        Il faut d'abord une séance (page Séances) et une catégorie de tir (page Catégories).
+    <p th:if="${#lists.isEmpty(mesSeances)}">
+        Il faut d'abord une séance : <a th:href="@{/seances/ajouter}">ajouter une séance</a>.
     </p>
 
-    <form th:unless="${#lists.isEmpty(mesSeances) or #lists.isEmpty(@clubDonnees.categories)}"
+    <form th:unless="${#lists.isEmpty(mesSeances)}"
           th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post">
-        <label>Date : <input type="date" name="date" th:value="${resultat?.date}" required></label><br>
         <label>Séance :
             <select name="seanceId">
-                <option th:each="s : ${mesSeances}" th:value="${s.id}" th:text="${@clubDonnees.nomSeance(s.id)}"
-                        th:selected="${resultat != null and s.id == resultat.seanceId}"></option>
+                <option th:each="s, etat : ${mesSeances}" th:value="${s.id}" th:text="${@clubDonnees.nomSeance(s.id)}"
+                        th:selected="${resultat == null ? etat.first : s.id == resultat.seanceId}"></option>
             </select>
-        </label><br>
+        </label>
         <label>Catégorie :
             <select name="categorieId">
                 <option th:each="c : ${@clubDonnees.categories}" th:value="${c.id}" th:text="${c.nom}"
                         th:selected="${resultat != null and c.id == resultat.categorieId}"></option>
             </select>
-        </label><br>
-        <label>Notation :
-            <select name="echelle">
-                <option value="10" th:selected="${resultat == null or resultat.echelle == 10}">0 à 10</option>
-                <option value="100" th:selected="${resultat != null and resultat.echelle == 100}">0 à 100</option>
-            </select>
-        </label><br>
-        <label>Feuille de résultat (un coup après l'autre, M = manqué) :<br>
-            <textarea name="coups" rows="3" cols="60" placeholder="10 9 9 M 8 10" required
+        </label>
+        <label>Date : <input type="date" name="date" th:value="${resultat?.date ?: aujourdhui}" required></label>
+
+        <div class="choix-echelle">
+            Notation :
+            <label><input type="radio" name="echelle" value="10" onchange="changerEchelle()"
+                          th:checked="${resultat == null or resultat.echelle == 10}"> 0 à 10</label>
+            <label><input type="radio" name="echelle" value="100" onchange="changerEchelle()"
+                          th:checked="${resultat != null and resultat.echelle == 100}"> 0 à 100</label>
+        </div>
+
+        <h3>Les coups</h3>
+        <p><small>Touchez la valeur de chaque coup, dans l'ordre. M = manqué.</small></p>
+
+        <!-- Notation 0 à 10 : un bouton par valeur, un toucher = un coup -->
+        <div class="clavier" id="clavier-10">
+            <button type="button" onclick="ajouterCoup('10')">10</button>
+            <button type="button" onclick="ajouterCoup('9')">9</button>
+            <button type="button" onclick="ajouterCoup('8')">8</button>
+            <button type="button" onclick="ajouterCoup('7')">7</button>
+            <button type="button" onclick="ajouterCoup('6')">6</button>
+            <button type="button" onclick="ajouterCoup('5')">5</button>
+            <button type="button" onclick="ajouterCoup('4')">4</button>
+            <button type="button" onclick="ajouterCoup('3')">3</button>
+            <button type="button" onclick="ajouterCoup('2')">2</button>
+            <button type="button" onclick="ajouterCoup('1')">1</button>
+            <button type="button" onclick="ajouterCoup('0')">0</button>
+            <button type="button" class="manque" onclick="ajouterCoup('M')">M</button>
+        </div>
+
+        <!-- Notation 0 à 100 : on tape le nombre puis OK -->
+        <div id="clavier-100" hidden>
+            <div class="saisie-en-cours" id="en-cours"></div>
+            <div class="clavier">
+                <button type="button" onclick="chiffre('7')">7</button>
+                <button type="button" onclick="chiffre('8')">8</button>
+                <button type="button" onclick="chiffre('9')">9</button>
+                <button type="button" class="manque" onclick="ajouterCoup('M')">M</button>
+                <button type="button" onclick="chiffre('4')">4</button>
+                <button type="button" onclick="chiffre('5')">5</button>
+                <button type="button" onclick="chiffre('6')">6</button>
+                <button type="button" onclick="enCours = enCours.slice(0, -1); majEnCours()">⌫</button>
+                <button type="button" onclick="chiffre('1')">1</button>
+                <button type="button" onclick="chiffre('2')">2</button>
+                <button type="button" onclick="chiffre('3')">3</button>
+                <button type="button" class="ok" onclick="validerNombre()" style="grid-row: span 2">OK</button>
+                <button type="button" onclick="chiffre('0')" style="grid-column: span 3">0</button>
+            </div>
+        </div>
+
+        <p>
+            <button type="button" onclick="retirerDernier()">↩ Effacer le dernier coup</button>
+            <button type="button" onclick="toutEffacer()">Tout effacer</button>
+        </p>
+
+        <p><strong id="total">Total : 0</strong></p>
+        <div class="cible cible-apercu" id="apercu"></div>
+
+        <label>Feuille de résultat (vous pouvez aussi la corriger ici) :
+            <textarea name="coups" id="coups" rows="2" required oninput="majApercu()"
                       th:text="${resultat?.coupsTexte}"></textarea>
-        </label><br>
-        <small>Le total est calculé automatiquement.</small><br>
+        </label>
+
         <button type="submit">Enregistrer</button>
     </form>
 
     <a th:href="@{/resultats}">← Résultats</a>
+
+    <script>
+        const champ = document.getElementById('coups');
+        let enCours = '';
+
+        function echelle() {
+            return Number(document.querySelector('input[name=echelle]:checked').value);
+        }
+
+        function coups() {
+            return Cible.lireCoups(champ.value, echelle());
+        }
+
+        function ecrire(liste) {
+            champ.value = liste.join(' ');
+            majApercu();
+        }
+
+        function ajouterCoup(valeur) {
+            ecrire([...coups(), valeur]);
+        }
+
+        function retirerDernier() {
+            ecrire(coups().slice(0, -1));
+        }
+
+        function toutEffacer() {
+            if (coups().length === 0 || confirm('Effacer tous les coups ?')) ecrire([]);
+        }
+
+        function chiffre(c) {
+            if ((enCours + c).length <= 3 && Number(enCours + c) <= 100) enCours += c;
+            majEnCours();
+        }
+
+        function majEnCours() {
+            document.getElementById('en-cours').textContent = enCours;
+        }
+
+        function validerNombre() {
+            if (enCours === '') return;
+            ajouterCoup(String(Number(enCours)));
+            enCours = '';
+            majEnCours();
+        }
+
+        function changerEchelle() {
+            document.getElementById('clavier-10').hidden = echelle() !== 10;
+            document.getElementById('clavier-100').hidden = echelle() !== 100;
+            majApercu();
+        }
+
+        function majApercu() {
+            const liste = coups();
+            document.getElementById('total').textContent =
+                `Total : ${Cible.total(liste)} / ${liste.length * echelle()} (${liste.length} coups)`;
+            Cible.dessiner(document.getElementById('apercu'), echelle(), liste);
+        }
+
+        document.addEventListener('DOMContentLoaded', changerEchelle);
+    </script>
 
 </body>
 </html>

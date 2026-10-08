@@ -36,15 +36,15 @@ public class InscriptionController {
     public String inscription(@RequestParam String firstName, @RequestParam String lastName,
                               @RequestParam String username, @RequestParam String password,
                               @RequestParam(defaultValue = "") String licence,
-                              @RequestParam(name = "modele", required = false) List<String> modelesSaisis,
                               @RequestParam(name = "categorie", required = false) List<String> categoriesSaisies,
+                              @RequestParam(name = "version", required = false) List<String> versionsSaisies,
                               Model model) {
-        List<String> modeles = modelesSaisis == null ? List.of() : modelesSaisis;
         List<String> categories = categoriesSaisies == null ? List.of() : categoriesSaisies;
-        // Une arme compte seulement si son modèle est rempli.
+        List<String> versions = versionsSaisies == null ? List.of() : versionsSaisies;
+        // Une ligne d'arme compte seulement si une catégorie est choisie.
         List<Integer> armes = new ArrayList<>();
-        for (int i = 0; i < modeles.size(); i++) {
-            if (!modeles.get(i).isBlank()) {
+        for (int i = 0; i < categories.size(); i++) {
+            if (!categories.get(i).isBlank()) {
                 armes.add(i);
             }
         }
@@ -56,8 +56,8 @@ public class InscriptionController {
             erreur = "Le numéro de licence doit faire 6 caractères.";
         } else if (armes.size() > ARMES_MAX) {
             erreur = "Au maximum " + ARMES_MAX + " armes.";
-        } else if (armes.stream().anyMatch(i -> i >= categories.size() || !Arme.CATEGORIES.contains(categories.get(i)))) {
-            erreur = "Choisissez une catégorie pour chaque arme.";
+        } else if (armes.stream().anyMatch(i -> !Arme.valide(categories.get(i), version(versions, i)))) {
+            erreur = "Pour un Fas 57, choisissez 02 ou 03.";
         }
         if (erreur != null) {
             model.addAttribute("erreur", erreur);
@@ -65,7 +65,7 @@ public class InscriptionController {
             model.addAttribute("lastName", lastName);
             model.addAttribute("username", username);
             model.addAttribute("licence", licence);
-            preparerArmes(model, modeles, categories);
+            preparerArmes(model, categories, versions);
             return "inscription";
         }
 
@@ -76,21 +76,23 @@ public class InscriptionController {
             donnees.licences.add(new Licence(donnees.nouvelId(), licence, "", tireur.getId()));
         }
         for (int i : armes) {
-            donnees.armes.add(new Arme(donnees.nouvelId(), modeles.get(i).trim(), categories.get(i), tireur.getId()));
+            donnees.armes.add(new Arme(donnees.nouvelId(), categories.get(i), version(versions, i), tireur.getId()));
         }
         return "redirect:/login?inscrit";
     }
 
-    // Les 4 lignes d'arme du formulaire, avec ce qui a déjà été tapé (si on réaffiche après une erreur).
-    private void preparerArmes(Model model, List<String> modeles, List<String> categories) {
+    private static String version(List<String> versions, int i) {
+        return i < versions.size() ? versions.get(i) : "";
+    }
+
+    // Les 4 lignes d'arme du formulaire, avec ce qui a déjà été choisi (si on réaffiche après une erreur).
+    private void preparerArmes(Model model, List<String> categories, List<String> versions) {
         List<String[]> lignes = new ArrayList<>();
         for (int i = 0; i < ARMES_MAX; i++) {
-            lignes.add(new String[] {
-                    i < modeles.size() ? modeles.get(i) : "",
-                    i < categories.size() ? categories.get(i) : ""
-            });
+            lignes.add(new String[] { i < categories.size() ? categories.get(i) : "", version(versions, i) });
         }
         model.addAttribute("lignesArme", lignes);
         model.addAttribute("categoriesArme", Arme.CATEGORIES);
+        model.addAttribute("versions57", Arme.VERSIONS_57);
     }
 }

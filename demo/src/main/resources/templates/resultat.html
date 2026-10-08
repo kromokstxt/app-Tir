@@ -2,11 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Résultat</title>
-    <style>
-        #cible { width: 100%; max-width: 600px; aspect-ratio: 1; border: 1px solid #ccc; cursor: grab; touch-action: none; }
-        #cible text { font-family: Arial, sans-serif; text-anchor: middle; dominant-baseline: central; user-select: none; }
-    </style>
+    <script th:src="@{/cible.js}"></script>
 </head>
 <body>
 
@@ -23,40 +22,14 @@
     </p>
 
     <p>
-        <button type="button" onclick="zoomer(0.7)">+ Zoom</button>
-        <button type="button" onclick="zoomer(1.4)">− Zoom</button>
-        <button type="button" onclick="recentrer()">Tout voir</button>
-        <small>Molette pour zoomer, glisser pour se déplacer.</small>
+        <button type="button" onclick="grandeCible.zoom.zoomer(0.7)">+ Zoom</button>
+        <button type="button" onclick="grandeCible.zoom.zoomer(1.4)">− Zoom</button>
+        <button type="button" onclick="grandeCible.zoom.recentrer()">Tout voir</button>
+        <br><small>Pincez avec deux doigts ou utilisez la molette pour zoomer, glissez pour vous déplacer.</small>
     </p>
 
-    <svg id="cible" viewBox="-115 -115 230 230" xmlns="http://www.w3.org/2000/svg">
-        <rect x="-115" y="-115" width="230" height="230" fill="#fff"/>
-
-        <!-- Anneaux 1 à 4 : blancs, traits noirs -->
-        <circle r="100" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <circle r="90" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <circle r="80" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <circle r="70" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <!-- Anneaux 5 à 10 : le visuel noir, traits blancs -->
-        <circle r="60" fill="#000"/>
-        <circle r="50" fill="none" stroke="#fff" stroke-width="0.6"/>
-        <circle r="40" fill="none" stroke="#fff" stroke-width="0.6"/>
-        <circle r="30" fill="none" stroke="#fff" stroke-width="0.6"/>
-        <circle r="20" fill="none" stroke="#fff" stroke-width="0.6"/>
-        <circle r="10" fill="none" stroke="#fff" stroke-width="0.6"/>
-        <circle r="3" fill="none" stroke="#fff" stroke-width="0.5"/>
-
-        <!-- Numéros des anneaux sur les quatre diagonales -->
-        <text th:each="n : ${numeros}" th:attr="x=${n.x}, y=${n.y}, fill=${n.surLeNoir ? '#fff' : '#000'}"
-              font-size="6" th:text="${n.anneau}"></text>
-
-        <!-- Les coups -->
-        <g th:each="coup : ${coups}">
-            <title th:text="'Coup ' + ${coup.numero} + ' : ' + ${coup.valeur}"></title>
-            <circle th:attr="cx=${coup.x}, cy=${coup.y}" r="3.2" fill="#e8312a" stroke="#fff" stroke-width="0.5"/>
-            <text th:attr="x=${coup.x}, y=${coup.y}" font-size="3.2" fill="#fff" th:text="${coup.numero}"></text>
-        </g>
-    </svg>
+    <div id="grandeCible" class="cible cible-grande" data-cible data-zoom
+         th:attr="data-echelle=${resultat.echelle}, data-coups=${resultat.coupsTexte}"></div>
 
     <h3>Feuille de résultat</h3>
     <ol>
@@ -67,60 +40,6 @@
     <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}">Modifier</a> ·
     <a th:href="@{/resultats}">← Résultats</a>
 
-    <script>
-        // Zoom et déplacement de la cible en changeant la zone affichée (viewBox).
-        const cible = document.getElementById('cible');
-        const depart = { x: -115, y: -115, taille: 230 };
-        let vue = { ...depart };
-
-        function afficher() {
-            cible.setAttribute('viewBox', `${vue.x} ${vue.y} ${vue.taille} ${vue.taille}`);
-        }
-
-        function zoomer(facteur, cx, cy) {
-            const nouvelle = Math.min(230, Math.max(15, vue.taille * facteur));
-            cx = cx ?? vue.x + vue.taille / 2;
-            cy = cy ?? vue.y + vue.taille / 2;
-            vue.x = cx - (cx - vue.x) * nouvelle / vue.taille;
-            vue.y = cy - (cy - vue.y) * nouvelle / vue.taille;
-            vue.taille = nouvelle;
-            afficher();
-        }
-
-        function recentrer() {
-            vue = { ...depart };
-            afficher();
-        }
-
-        function pointSvg(e) {
-            const rect = cible.getBoundingClientRect();
-            return {
-                x: vue.x + (e.clientX - rect.left) / rect.width * vue.taille,
-                y: vue.y + (e.clientY - rect.top) / rect.height * vue.taille
-            };
-        }
-
-        cible.addEventListener('wheel', e => {
-            e.preventDefault();
-            const p = pointSvg(e);
-            zoomer(e.deltaY < 0 ? 0.8 : 1.25, p.x, p.y);
-        }, { passive: false });
-
-        let glisse = null;
-        cible.addEventListener('pointerdown', e => {
-            glisse = { x: e.clientX, y: e.clientY };
-            cible.setPointerCapture(e.pointerId);
-        });
-        cible.addEventListener('pointermove', e => {
-            if (!glisse) return;
-            const rect = cible.getBoundingClientRect();
-            vue.x -= (e.clientX - glisse.x) / rect.width * vue.taille;
-            vue.y -= (e.clientY - glisse.y) / rect.height * vue.taille;
-            glisse = { x: e.clientX, y: e.clientY };
-            afficher();
-        });
-        cible.addEventListener('pointerup', () => glisse = null);
-    </script>
 
 </body>
 </html>

@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Séances</title>
 </head>
 <body>
@@ -10,8 +12,7 @@
 
     <h2 th:text="${admin} ? 'Séances :' : 'Mes séances :'">Séances :</h2>
 
-    <p th:if="${#lists.isEmpty(@clubDonnees.saisons)}">Il faut d'abord qu'une saison existe (page Saisons).</p>
-    <a th:unless="${#lists.isEmpty(@clubDonnees.saisons)}" th:href="@{/seances/ajouter}">+ Ajouter une séance</a>
+    <a th:href="@{/seances/ajouter}">+ Ajouter une séance</a>
 
     <ul>
         <li th:each="seance : ${seances}">

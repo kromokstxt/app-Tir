@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Armes</title>
 </head>
 <body>
@@ -14,8 +16,7 @@
 
     <ul>
         <li th:each="arme : ${armes}">
-            <span th:text="${arme.modele}"></span>
-            (<span th:text="${arme.categorie}"></span>)
+            <strong th:text="${arme.nom}"></strong>
             <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(arme.tireurId)}"></span>
             <a th:href="@{/armes/{id}/modifier(id=${arme.id})}">Modifier</a>
             <form th:action="@{/armes/{id}/supprimer(id=${arme.id})}" method="post" style="display:inline">

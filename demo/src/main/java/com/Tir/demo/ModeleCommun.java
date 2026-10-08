@@ -6,6 +6,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
+import java.time.LocalDate;
+
 // Ajoute à toutes les pages : le club, le tireur connecté (« moi ») et s'il est admin.
 @ControllerAdvice
 public class ModeleCommun {
@@ -30,6 +32,12 @@ public class ModeleCommun {
             return null;
         }
         return donnees.tireurParUsername(auth.getName());
+    }
+
+    // La date du jour, pour pré-remplir les champs de date (format 2026-10-08).
+    @ModelAttribute("aujourdhui")
+    public String aujourdhui() {
+        return LocalDate.now().toString();
     }
 
     @ModelAttribute("admin")

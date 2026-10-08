@@ -1,0 +1,80 @@
+/* Mise en page pensée pour le téléphone, qui marche aussi sur ordinateur. */
+
+/* Ce qui est caché (hidden) reste caché, même avec les règles d'affichage ci-dessous. */
+[hidden] { display: none !important; }
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.4;
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 12px 16px 48px;
+    background: #fff;
+    color: #111;
+}
+
+h1 { font-size: 1.4em; margin: 0.3em 0; }
+h2 { font-size: 1.25em; }
+h3 { font-size: 1.1em; }
+
+input, select, textarea, button { font: inherit; }
+
+label { display: block; margin: 6px 0; }
+
+input[type=text], input[type=password], input[type=date], input[type=time],
+input[type=number], select, textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 420px;
+    padding: 10px;
+    margin: 4px 0 6px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    background: #fff;
+}
+
+button {
+    min-height: 44px;
+    padding: 8px 16px;
+    margin: 4px 0;
+    border: 1px solid #777;
+    border-radius: 6px;
+    background: #f2f2f2;
+    cursor: pointer;
+}
+
+button[type=submit] { background: #1f4e9c; border-color: #1f4e9c; color: #fff; }
+
+a { color: #1f4e9c; }
+
+ul { padding-left: 1.1em; }
+li { margin: 12px 0; }
+
+hr { border: 0; border-top: 1px solid #ccc; margin: 12px 0; }
+
+/* Les petits boutons « Supprimer » dans les listes restent sur la même ligne. */
+li form button[type=submit], .admin-actions form button[type=submit] {
+    background: #f2f2f2; color: #a01818; border-color: #a01818; min-height: 36px; padding: 4px 10px;
+}
+
+/* Clavier pour saisir les coups. */
+.clavier {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 420px;
+    margin: 8px 0;
+}
+.clavier button { min-height: 58px; font-size: 1.35em; margin: 0; background: #fff; }
+.clavier .manque { color: #a01818; }
+.clavier .ok { background: #1f4e9c; color: #fff; border-color: #1f4e9c; }
+
+.saisie-en-cours { font-size: 1.6em; min-height: 1.4em; font-weight: bold; }
+
+.choix-echelle label { display: inline-block; margin-right: 18px; }
+
+/* Les cibles. */
+.cible svg { width: 100%; height: 100%; display: block; }
+.cible-mini { width: 110px; height: 110px; display: inline-block; vertical-align: middle; margin-right: 8px; }
+.cible-apercu { width: 100%; max-width: 420px; aspect-ratio: 1; }
+.cible-grande { width: 100%; max-width: 600px; aspect-ratio: 1; border: 1px solid #ccc; touch-action: none; cursor: grab; }

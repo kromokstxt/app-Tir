@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
 import java.util.List;
 
 // Un résultat appartient au tireur de sa séance.
@@ -52,8 +53,6 @@ public class ResultatController {
         Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
         acces.verifierProprietaire(donnees.proprietaireSeance(resultat.getSeanceId()));
         model.addAttribute("resultat", resultat);
-        model.addAttribute("coups", Cible.placer(resultat));
-        model.addAttribute("numeros", Cible.numeros());
         return "resultat";
     }
 
@@ -85,7 +84,9 @@ public class ResultatController {
     }
 
     private List<Seance> mesSeances() {
-        return donnees.seances.stream().filter(s -> acces.peutVoir(s.getTireurId())).toList();
+        // Les plus récentes en premier : la séance du jour est choisie d'office.
+        return donnees.seances.stream().filter(s -> acces.peutVoir(s.getTireurId()))
+                .sorted(Comparator.comparing(Seance::getDate).reversed()).toList();
     }
 
     private void verifierSeanceEtCategorie(int seanceId, int categorieId) {
