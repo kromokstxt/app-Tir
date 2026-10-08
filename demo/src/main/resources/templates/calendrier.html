@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendrier</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2>Calendrier :</h2>
+
+    <a th:if="${admin}" th:href="@{/calendrier/ajouter}">+ Ajouter une date</a>
+
+    <p th:if="${#lists.isEmpty(evenements)}">Rien de prévu pour le moment.</p>
+
+    <ul>
+        <li th:each="evenement : ${evenements}">
+            <strong th:text="${evenement.date}"></strong>
+            <span th:unless="${#strings.isEmpty(evenement.heure)}" th:text="'à ' + ${evenement.heure}"></span>
+            : <span th:text="${evenement.titre}"></span>
+            <span th:unless="${#strings.isEmpty(evenement.description)}" th:text="'— ' + ${evenement.description}"></span>
+            <span th:if="${admin}">
+                <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}">Modifier</a>
+                <form th:action="@{/calendrier/{id}/supprimer(id=${evenement.id})}" method="post" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </span>
+        </li>
+    </ul>
+
+</body>
+</html>

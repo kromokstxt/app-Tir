@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-// Tout le monde voit les catégories de tir, seul l'admin les modifie.
+// Tout le monde voit les catégories de tir (toutes à 300 m), seul l'admin les modifie.
 @Controller
 @RequestMapping("/categories")
 public class CategorieController {
@@ -34,9 +34,9 @@ public class CategorieController {
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam String nom, @RequestParam int distance) {
+    public String ajouter(@RequestParam String nom) {
         acces.verifierAdmin();
-        donnees.categories.add(new CategorieTir(donnees.nouvelId(), nom, distance));
+        donnees.categories.add(new CategorieTir(donnees.nouvelId(), nom, CategorieTir.DISTANCE));
         return "redirect:/categories";
     }
 
@@ -48,10 +48,10 @@ public class CategorieController {
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam String nom, @RequestParam int distance) {
+    public String modifier(@PathVariable int id, @RequestParam String nom) {
         acces.verifierAdmin();
         ClubDonnees.trouver(donnees.categories, id);
-        ClubDonnees.remplacer(donnees.categories, new CategorieTir(id, nom, distance));
+        ClubDonnees.remplacer(donnees.categories, new CategorieTir(id, nom, CategorieTir.DISTANCE));
         return "redirect:/categories";
     }
 

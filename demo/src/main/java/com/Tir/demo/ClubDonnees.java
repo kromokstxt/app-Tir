@@ -22,7 +22,8 @@ public class ClubDonnees {
     public final List<Saison> saisons = new CopyOnWriteArrayList<>();
     public final List<CategorieTir> categories = new CopyOnWriteArrayList<>();
     public final List<Classement> classements = new CopyOnWriteArrayList<>();
-    public final List<MembreComite> comite = new CopyOnWriteArrayList<>();
+    public final List<Annonce> annonces = new CopyOnWriteArrayList<>();
+    public final List<Evenement> calendrier = new CopyOnWriteArrayList<>();
 
     private final AtomicInteger prochainId = new AtomicInteger(1);
 
@@ -31,6 +32,9 @@ public class ClubDonnees {
         tireurs.add(new Shooter(nouvelId(), "Admin", "Club", club.getId(), "admin", encoder.encode(motDePasseAdmin), true));
         tireurs.add(new Shooter(nouvelId(), "xxxx", "yyy", club.getId(), "tireur1", encoder.encode("tireur1"), false));
         tireurs.add(new Shooter(nouvelId(), "xxxx", "yyy", club.getId(), "tireur2", encoder.encode("tireur2"), false));
+        for (String categorie : Arme.CATEGORIES) {
+            categories.add(new CategorieTir(nouvelId(), categorie, CategorieTir.DISTANCE));
+        }
     }
 
     public int nouvelId() {

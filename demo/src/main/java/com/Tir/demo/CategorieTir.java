@@ -2,6 +2,9 @@ package com.Tir.demo;
 
 public class CategorieTir implements Identifiable {
 
+    // Le club ne tire qu'à 300 m.
+    public static final int DISTANCE = 300;
+
     private int id;
     private String nom;
     private int distance;

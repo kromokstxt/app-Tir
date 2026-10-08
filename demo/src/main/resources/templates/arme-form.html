@@ -12,7 +12,12 @@
 
     <form th:action="${arme == null} ? @{/armes/ajouter} : @{/armes/{id}/modifier(id=${arme.id})}" method="post">
         <label>Modèle : <input type="text" name="modele" th:value="${arme?.modele}" required></label><br>
-        <label>Catégorie : <input type="text" name="categorie" th:value="${arme?.categorie}" required></label><br>
+        <label>Catégorie :
+            <select name="categorie">
+                <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"
+                        th:selected="${arme != null and c == arme.categorie}"></option>
+            </select>
+        </label><br>
         <label th:replace="~{fragments :: choixTireur(${arme?.tireurId})}"></label>
         <button type="submit">Enregistrer</button>
     </form>

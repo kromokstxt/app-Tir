@@ -12,12 +12,15 @@
 
     <p th:if="${param.error}">Nom d'utilisateur ou mot de passe incorrect.</p>
     <p th:if="${param.deconnecte}">Vous êtes déconnecté.</p>
+    <p th:if="${param.inscrit}">Votre compte est créé, vous pouvez vous connecter.</p>
 
     <form th:action="@{/login}" method="post">
         <label>Nom d'utilisateur : <input type="text" name="username" required autofocus></label><br>
         <label>Mot de passe : <input type="password" name="password" required></label><br>
         <button type="submit">Se connecter</button>
     </form>
+
+    <p>Pas encore de compte ? <a th:href="@{/inscription}">Créer un compte</a></p>
 
 </body>
 </html>

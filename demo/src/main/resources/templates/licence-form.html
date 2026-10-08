@@ -11,8 +11,10 @@
     <h2 th:text="${licence == null} ? 'Ajouter une licence' : 'Modifier une licence'">Licence</h2>
 
     <form th:action="${licence == null} ? @{/licences/ajouter} : @{/licences/{id}/modifier(id=${licence.id})}" method="post">
-        <label>Numéro : <input type="text" name="numero" th:value="${licence?.numero}" required></label><br>
-        <label>Valable jusqu'au : <input type="date" name="dateValidite" th:value="${licence?.dateValidite}" required></label><br>
+        <label>Numéro (6 caractères) : <input type="text" name="numero" th:value="${licence?.numero}"
+                                              minlength="6" maxlength="6" required></label><br>
+        <small>votre numéro utilisé pour le politronique au stand</small><br>
+        <label>Valable jusqu'au : <input type="date" name="dateValidite" th:value="${licence?.dateValidite}"></label><br>
         <label th:replace="~{fragments :: choixTireur(${licence?.tireurId})}"></label>
         <button type="submit">Enregistrer</button>
     </form>

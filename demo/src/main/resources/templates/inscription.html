@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Créer un compte</title>
+</head>
+<body>
+
+    <h1 th:text="${club.nom}">Stand de tir</h1>
+
+    <h2>Créer un compte</h2>
+
+    <p th:if="${erreur}" th:text="${erreur}"></p>
+
+    <form th:action="@{/inscription}" method="post">
+        <label>Prénom : <input type="text" name="firstName" th:value="${firstName}" required></label><br>
+        <label>Nom : <input type="text" name="lastName" th:value="${lastName}" required></label><br>
+        <label>Nom d'utilisateur : <input type="text" name="username" th:value="${username}" required></label><br>
+        <label>Mot de passe : <input type="password" name="password" required></label><br>
+        <label>Numéro de licence (6 caractères, facultatif) :
+            <input type="text" name="licence" th:value="${licence}" minlength="6" maxlength="6">
+        </label><br>
+        <small>votre numéro utilisé pour le politronique au stand</small><br>
+        <button type="submit">Créer mon compte</button>
+    </form>
+
+    <p><a th:href="@{/login}">← Retour à la connexion</a></p>
+
+</body>
+</html>

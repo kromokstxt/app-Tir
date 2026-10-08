@@ -14,8 +14,8 @@
 
     <ul>
         <li th:each="licence : ${licences}">
-            N° <span th:text="${licence.numero}"></span>,
-            valable jusqu'au <span th:text="${licence.dateValidite}"></span>
+            N° <span th:text="${licence.numero}"></span>
+            <span th:unless="${#strings.isEmpty(licence.dateValidite)}">, valable jusqu'au <span th:text="${licence.dateValidite}"></span></span>
             <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(licence.tireurId)}"></span>
             <a th:href="@{/licences/{id}/modifier(id=${licence.id})}">Modifier</a>
             <form th:action="@{/licences/{id}/supprimer(id=${licence.id})}" method="post" style="display:inline">
