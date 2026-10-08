@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Annonce comité</title>
 </head>
 <body>
@@ -12,7 +14,7 @@
 
     <form th:action="${annonce == null} ? @{/annonces/ajouter} : @{/annonces/{id}/modifier(id=${annonce.id})}" method="post">
         <label>Titre : <input type="text" name="titre" th:value="${annonce?.titre}" required></label><br>
-        <label>Date : <input type="date" name="date" th:value="${annonce?.date}" required></label><br>
+        <label>Date : <input type="date" name="date" th:value="${annonce?.date ?: aujourdhui}" required></label><br>
         <label>Message :<br>
             <textarea name="message" rows="6" cols="60" th:text="${annonce?.message}" required></textarea>
         </label><br>

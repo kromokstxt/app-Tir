@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+// La saison d'une séance est trouvée automatiquement d'après sa date.
 @Controller
 @RequestMapping("/seances")
 public class SeanceController {
@@ -32,10 +33,10 @@ public class SeanceController {
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam int saisonId, @RequestParam String date, @RequestParam String type,
+    public String ajouter(@RequestParam String date, @RequestParam String type,
                           @RequestParam String lieu, @RequestParam(required = false) Integer tireurId) {
-        ClubDonnees.trouver(donnees.saisons, saisonId);
-        donnees.seances.add(new Seance(donnees.nouvelId(), acces.proprietaire(tireurId), saisonId, date, type, lieu));
+        donnees.seances.add(new Seance(donnees.nouvelId(), acces.proprietaire(tireurId),
+                donnees.saisonPour(date), date, type, lieu));
         return "redirect:/seances";
     }
 
@@ -48,12 +49,12 @@ public class SeanceController {
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam int saisonId, @RequestParam String date,
+    public String modifier(@PathVariable int id, @RequestParam String date,
                            @RequestParam String type, @RequestParam String lieu,
                            @RequestParam(required = false) Integer tireurId) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.seances, id).getTireurId());
-        ClubDonnees.trouver(donnees.saisons, saisonId);
-        ClubDonnees.remplacer(donnees.seances, new Seance(id, acces.proprietaire(tireurId), saisonId, date, type, lieu));
+        ClubDonnees.remplacer(donnees.seances, new Seance(id, acces.proprietaire(tireurId),
+                donnees.saisonPour(date), date, type, lieu));
         return "redirect:/seances";
     }
 

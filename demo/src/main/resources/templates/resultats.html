@@ -2,7 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Résultats</title>
+    <script th:src="@{/cible.js}"></script>
 </head>
 <body>
 
@@ -15,6 +18,8 @@
 
     <ul>
         <li th:each="resultat : ${resultats}">
+            <a th:href="@{/resultats/{id}(id=${resultat.id})}" class="cible cible-mini" data-cible
+               th:attr="data-echelle=${resultat.echelle}, data-coups=${resultat.coupsTexte}"></a>
             <strong th:text="${resultat.score} + ' / ' + ${resultat.scoreMax}"></strong>
             (<span th:text="${#lists.size(resultat.coups)}"></span> coups) le
             <span th:text="${resultat.date}"></span>

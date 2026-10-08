@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Arme</title>
 </head>
 <body>
@@ -11,18 +13,31 @@
     <h2 th:text="${arme == null} ? 'Ajouter une arme' : 'Modifier une arme'">Arme</h2>
 
     <form th:action="${arme == null} ? @{/armes/ajouter} : @{/armes/{id}/modifier(id=${arme.id})}" method="post">
-        <label>Modèle : <input type="text" name="modele" th:value="${arme?.modele}" required></label><br>
         <label>Catégorie :
-            <select name="categorie">
+            <select name="categorie" onchange="montrerVersion(this)">
                 <option th:each="c : ${categories}" th:value="${c}" th:text="${c}"
                         th:selected="${arme != null and c == arme.categorie}"></option>
             </select>
-        </label><br>
+        </label>
+        <!-- Seulement pour un Fas 57 -->
+        <label class="version-57">Version :
+            <select name="version">
+                <option th:each="v : ${versions57}" th:value="${v}" th:text="'57/' + ${v}"
+                        th:selected="${arme != null and v == arme.version}"></option>
+            </select>
+        </label>
         <label th:replace="~{fragments :: choixTireur(${arme?.tireurId})}"></label>
         <button type="submit">Enregistrer</button>
     </form>
 
     <a th:href="@{/armes}">← Armes</a>
+
+    <script>
+        function montrerVersion(choix) {
+            choix.closest('form').querySelector('.version-57').hidden = choix.value !== 'Fas 57';
+        }
+        montrerVersion(document.querySelector('select[name=categorie]'));
+    </script>
 
 </body>
 </html>

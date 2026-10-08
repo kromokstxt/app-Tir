@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Créer un compte</title>
 </head>
 <body>
@@ -26,11 +28,17 @@
         <!-- 4 lignes : la première est visible, le bouton fait apparaître les suivantes. -->
         <div th:each="ligne, etat : ${lignesArme}" class="ligne-arme"
              th:hidden="${etat.index > 0 and #strings.isEmpty(ligne[0])}">
-            <label>Modèle : <input type="text" name="modele" th:value="${ligne[0]}" placeholder="Fas 90 n° 123"></label>
-            <label>Catégorie :
-                <select name="categorie">
+            <label>Arme <span th:text="${etat.count}"></span> :
+                <select name="categorie" onchange="montrerVersion(this)">
+                    <option value="">— aucune —</option>
                     <option th:each="c : ${categoriesArme}" th:value="${c}" th:text="${c}"
-                            th:selected="${c == ligne[1]}"></option>
+                            th:selected="${c == ligne[0]}"></option>
+                </select>
+            </label>
+            <label class="version-57">Version :
+                <select name="version">
+                    <option th:each="v : ${versions57}" th:value="${v}" th:text="'57/' + ${v}"
+                            th:selected="${v == ligne[1]}"></option>
                 </select>
             </label>
         </div>
@@ -42,6 +50,12 @@
     <p><a th:href="@{/login}">← Retour à la connexion</a></p>
 
     <script>
+        // Pour un Fas 57 seulement : choisir 02 ou 03.
+        function montrerVersion(choix) {
+            choix.closest('.ligne-arme').querySelector('.version-57').hidden = choix.value !== 'Fas 57';
+        }
+        document.querySelectorAll('.ligne-arme select[name=categorie]').forEach(montrerVersion);
+
         // Affiche la ligne d'arme suivante ; le bouton disparaît quand les 4 sont visibles.
         function ajouterArme() {
             const cachees = document.querySelectorAll('.ligne-arme[hidden]');

@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
     <title>Séance</title>
 </head>
 <body>
@@ -11,15 +13,10 @@
     <h2 th:text="${seance == null} ? 'Ajouter une séance' : 'Modifier une séance'">Séance</h2>
 
     <form th:action="${seance == null} ? @{/seances/ajouter} : @{/seances/{id}/modifier(id=${seance.id})}" method="post">
-        <label>Date : <input type="date" name="date" th:value="${seance?.date}" required></label><br>
+        <label>Date : <input type="date" name="date" th:value="${seance?.date ?: aujourdhui}" required></label>
         <label>Type : <input type="text" name="type" th:value="${seance?.type}" required></label><br>
         <label>Lieu : <input type="text" name="lieu" th:value="${seance?.lieu}" required></label><br>
-        <label>Saison :
-            <select name="saisonId">
-                <option th:each="s : ${@clubDonnees.saisons}" th:value="${s.id}" th:text="${s.annee}"
-                        th:selected="${seance != null and s.id == seance.saisonId}"></option>
-            </select>
-        </label><br>
+        <p><small>La saison est choisie automatiquement d'après la date.</small></p>
         <label th:replace="~{fragments :: choixTireur(${seance?.tireurId})}"></label>
         <button type="submit">Enregistrer</button>
     </form>

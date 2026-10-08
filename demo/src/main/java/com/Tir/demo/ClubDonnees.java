@@ -74,6 +74,13 @@ public class ClubDonnees {
         resultats.removeIf(r -> r.getSeanceId() == id);
     }
 
+    // La saison qui contient cette date (les dates sont au format 2026-10-08), 0 s'il n'y en a pas.
+    public int saisonPour(String date) {
+        return saisons.stream()
+                .filter(s -> s.getDateDebut().compareTo(date) <= 0 && date.compareTo(s.getDateFin()) <= 0)
+                .mapToInt(Saison::getId).findFirst().orElse(0);
+    }
+
     // Le tireur à qui appartient une séance (-1 si elle n'existe plus).
     public int proprietaireSeance(int seanceId) {
         return seances.stream().filter(s -> s.getId() == seanceId)
@@ -88,7 +95,7 @@ public class ClubDonnees {
     }
 
     public String nomSaison(int id) {
-        return saisons.stream().filter(s -> s.getId() == id).map(Saison::getAnnee).findFirst().orElse("?");
+        return saisons.stream().filter(s -> s.getId() == id).map(Saison::getAnnee).findFirst().orElse("—");
     }
 
     public String nomCategorie(int id) {
