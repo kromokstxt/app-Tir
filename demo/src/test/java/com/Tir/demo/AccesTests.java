@@ -421,6 +421,8 @@ class AccesTests {
     void lesFichiersDeMiseEnPageSontPublics() throws Exception {
         mvc.perform(get("/style.css")).andExpect(status().isOk());
         mvc.perform(get("/login")).andExpect(content().string(containsString("width=device-width")));
+        // Chaque version a sa propre adresse : un téléphone ne garde pas une vieille copie.
+        mvc.perform(get("/login")).andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*/style-[0-9a-f]{32}\\.css.*")));
     }
 
     private static final String[] PAGES = {

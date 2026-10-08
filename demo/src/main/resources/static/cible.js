@@ -41,7 +41,7 @@
     }
 
     function totalProfond(coups) {
-        return coups.filter(c => !c.manque).reduce((somme, c) => somme + (c.profond ?? 0), 0);
+        return coups.filter(c => !c.manque).reduce((somme, c) => somme + (c.profond === null ? 0 : c.profond), 0);
     }
 
     // « 9 ↗ (87) »
@@ -86,7 +86,7 @@
             if (coup.manque) return;
             const r = rayon(coup);
             // Deux coups identiques sont un peu décalés pour qu'on voie les deux.
-            const n = dejaVus[coup.texte] = (dejaVus[coup.texte] ?? -1) + 1;
+            const n = dejaVus[coup.texte] = (coup.texte in dejaVus ? dejaVus[coup.texte] : -1) + 1;
             const decalage = (n % 2 ? 1 : -1) * Math.ceil(n / 2) * 9 * Math.PI / 180;
             const a = (coup.direction ? ANGLES[coup.direction] * Math.PI / 180 : i * ANGLE_OR - Math.PI / 2) + decalage;
             const x = (r * Math.cos(a)).toFixed(1), y = (r * Math.sin(a)).toFixed(1);
@@ -109,8 +109,8 @@
         const afficher = () => svg.setAttribute('viewBox', `${vue.x} ${vue.y} ${vue.taille} ${vue.taille}`);
         function zoomer(facteur, cx, cy) {
             const nouvelle = Math.min(230, Math.max(15, vue.taille * facteur));
-            cx = cx ?? vue.x + vue.taille / 2;
-            cy = cy ?? vue.y + vue.taille / 2;
+            if (cx === undefined) cx = vue.x + vue.taille / 2;
+            if (cy === undefined) cy = vue.y + vue.taille / 2;
             vue.x = cx - (cx - vue.x) * nouvelle / vue.taille;
             vue.y = cy - (cy - vue.y) * nouvelle / vue.taille;
             vue.taille = nouvelle;

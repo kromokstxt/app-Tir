@@ -13,12 +13,18 @@
 
     <h2 th:text="${resultat == null} ? 'Ajouter un résultat' : 'Modifier un résultat'">Résultat</h2>
 
+    <p id="erreur-js" class="erreur" hidden>
+        Un problème empêche la saisie des coups. Rechargez la page
+        (sur téléphone : tirez la page vers le bas ; sur ordinateur : Ctrl + F5).
+    </p>
+
     <p th:if="${#lists.isEmpty(mesSeances)}">
         Il faut d'abord une séance : <a th:href="@{/seances/ajouter}">ajouter une séance</a>.
     </p>
 
     <form th:unless="${#lists.isEmpty(mesSeances)}"
-          th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post">
+          th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post"
+          onsubmit="terminerCoup()">
         <label>Séance :
             <select name="seanceId">
                 <option th:each="s, etat : ${mesSeances}" th:value="${s.id}" th:text="${@clubDonnees.nomSeance(s.id)}"
@@ -44,7 +50,7 @@
         <h3>Les coups</h3>
         <p class="etape" id="consigne"></p>
 
-        <!-- Étape 1 : les points du coup -->
+        <!-- Les points du coup. Toucher les points du coup suivant enregistre le coup en cours. -->
         <div class="clavier" id="etape-points">
             <button type="button" onclick="choisirPoints('10')">10</button>
             <button type="button" onclick="choisirPoints('9')">9</button>
@@ -60,7 +66,7 @@
             <button type="button" class="manque" onclick="ajouter('M')">M</button>
         </div>
 
-        <!-- Étape 2 (concours) : le coup profond, sur 100 -->
+        <!-- Concours : le coup profond, sur 100 -->
         <div id="etape-profond" hidden>
             <div class="saisie-en-cours" id="profond-en-cours"></div>
             <div class="clavier">
@@ -79,13 +85,14 @@
             </div>
         </div>
 
-        <!-- Étape 3 : la flèche (direction depuis le centre) -->
-        <div class="clavier fleches" id="etape-direction" hidden>
+        <!-- La flèche du coup (facultative) : direction depuis le centre -->
+        <p class="sous-titre">Flèche (facultatif) :</p>
+        <div class="clavier fleches" id="etape-direction">
             <button type="button" onclick="choisirDirection('HG')">↖</button>
             <button type="button" onclick="choisirDirection('H')">↑</button>
             <button type="button" onclick="choisirDirection('HD')">↗</button>
             <button type="button" onclick="choisirDirection('G')">←</button>
-            <button type="button" class="sans-fleche" onclick="choisirDirection('')">pas de<br>flèche</button>
+            <button type="button" class="sans-fleche" onclick="choisirDirection('')">sans<br>flèche</button>
             <button type="button" onclick="choisirDirection('D')">→</button>
             <button type="button" onclick="choisirDirection('BG')">↙</button>
             <button type="button" onclick="choisirDirection('B')">↓</button>
@@ -109,11 +116,12 @@
     <a th:href="@{/resultats}">← Résultats</a>
 
     <script>
-        // Chaque coup se saisit en touchant : les points, puis (en concours) le coup profond, puis la flèche.
+        // Saisie d'un coup : on touche les points, puis (en concours) le coup profond et OK,
+        // puis la flèche si on veut. Toucher directement les points du coup suivant
+        // enregistre le coup en cours sans flèche.
         const champ = document.getElementById('coups');
-        let etape = 'points';  // 'points', 'profond' ou 'direction'
-        let points = '';       // points du coup en cours
-        let profond = '';      // coup profond du coup en cours (concours)
+        let enCours = null;   // le coup en cours : { points, profond }
+        let profond = '';     // chiffres du coup profond pendant qu'on le tape
 
         function concours() {
             return document.querySelector('input[name=concours]:checked').value === 'true';
@@ -123,21 +131,32 @@
             return Cible.lireCoups(champ.value);
         }
 
-        function recommencerCoup() {
-            etape = 'points';
-            points = '';
-            profond = '';
+        function enregistrer(texte) {
+            champ.value = coups().map(function (c) { return c.texte; }).concat([texte]).join(' ');
         }
 
-        function ajouter(texte) {
-            champ.value = [...coups().map(c => c.texte), texte].join(' ');
-            recommencerCoup();
-            majEtape();
+        // Enregistre le coup en cours (avec la flèche si on en donne une).
+        function terminerCoup(direction) {
+            if (enCours === null || enCours.profond === undefined) return;
+            let texte = enCours.points;
+            if (enCours.profond !== null) texte += ':' + enCours.profond;
+            if (direction) texte += '>' + direction;
+            enregistrer(texte);
+            enCours = null;
         }
 
         function choisirPoints(p) {
-            points = p;
-            etape = concours() ? 'profond' : 'direction';
+            terminerCoup();
+            // En concours, le coup profond reste à taper (undefined = pas encore donné).
+            enCours = { points: p, profond: concours() ? undefined : null };
+            profond = '';
+            majEtape();
+        }
+
+        function ajouter(texte) {   // M = manqué : enregistré tout de suite
+            terminerCoup();
+            enCours = null;
+            enregistrer(texte);
             majEtape();
         }
 
@@ -148,65 +167,76 @@
 
         function validerProfond() {
             if (profond === '') return;
-            etape = 'direction';
+            enCours.profond = Number(profond);
             majEtape();
         }
 
         function choisirDirection(direction) {
-            let texte = points;
-            if (concours()) texte += ':' + Number(profond);
-            if (direction) texte += '>' + direction;
-            ajouter(texte);
+            if (enCours === null || enCours.profond === undefined) return;
+            terminerCoup(direction);
+            majEtape();
         }
 
         function retirerDernier() {
-            if (etape !== 'points') {
-                recommencerCoup();      // annule le coup en cours
+            if (enCours !== null) {
+                enCours = null;          // annule le coup en cours
             } else {
-                champ.value = coups().slice(0, -1).map(c => c.texte).join(' ');
+                champ.value = coups().slice(0, -1).map(function (c) { return c.texte; }).join(' ');
             }
             majEtape();
         }
 
         function toutEffacer() {
-            if (coups().length === 0 || confirm('Effacer tous les coups ?')) {
+            if ((coups().length === 0 && enCours === null) || confirm('Effacer tous les coups ?')) {
                 champ.value = '';
-                recommencerCoup();
+                enCours = null;
                 majEtape();
             }
         }
 
         function changerType() {
             // Les coups n'ont pas les mêmes infos : changer de type recommence la saisie.
-            if (coups().length > 0 && !confirm('Changer de type efface les coups déjà saisis. Continuer ?')) {
-                document.querySelector(`input[name=concours][value="${!concours()}"]`).checked = true;
+            if ((coups().length > 0 || enCours !== null)
+                    && !confirm('Changer de type efface les coups déjà saisis. Continuer ?')) {
+                document.querySelector('input[name=concours][value="' + !concours() + '"]').checked = true;
                 return;
             }
             champ.value = '';
-            recommencerCoup();
+            enCours = null;
             majEtape();
         }
 
-        // Montre l'étape en cours, la consigne, le total, la liste des coups et la cible.
+        // Montre les bons boutons, la consigne, le total, la liste des coups et la cible.
         function majEtape() {
-            const numero = coups().length + 1;
-            document.getElementById('etape-points').hidden = etape !== 'points';
-            document.getElementById('etape-profond').hidden = etape !== 'profond';
-            document.getElementById('etape-direction').hidden = etape !== 'direction';
-            document.getElementById('profond-en-cours').textContent = profond;
-            document.getElementById('consigne').textContent =
-                etape === 'points' ? `Coup ${numero} : touchez les points (M = manqué).`
-                : etape === 'profond' ? `Coup ${numero} : ${points} points — tapez le coup profond (sur 100) puis OK.`
-                : `Coup ${numero} : ${points} points${concours() ? ' (' + Number(profond) + ')' : ''} — touchez la flèche.`;
-
             const liste = coups();
+            const numero = liste.length + 1;
+            const tapeProfond = enCours !== null && enCours.profond === undefined;
+            document.getElementById('etape-points').hidden = tapeProfond;
+            document.getElementById('etape-profond').hidden = !tapeProfond;
+            document.getElementById('profond-en-cours').textContent = profond;
+            document.querySelectorAll('#etape-direction button').forEach(function (b) {
+                b.disabled = enCours === null || tapeProfond;
+            });
+
+            let consigne;
+            if (enCours === null) {
+                consigne = 'Coup ' + numero + ' : touchez les points (M = manqué).';
+            } else if (tapeProfond) {
+                consigne = 'Coup ' + numero + ' : ' + enCours.points + ' points — tapez le coup profond (sur 100) puis OK.';
+            } else {
+                consigne = 'Coup ' + numero + ' : ' + enCours.points + ' points'
+                    + (enCours.profond !== null ? ' (' + enCours.profond + ')' : '')
+                    + ' — touchez la flèche, ou directement les points du coup suivant.';
+            }
+            document.getElementById('consigne').textContent = consigne;
+
             document.getElementById('total').textContent =
-                `Total : ${Cible.total(liste)} / ${liste.length * 10}`
-                + (concours() ? ` — coups profonds : ${Cible.totalProfond(liste)} / ${liste.length * 100}` : '')
-                + ` (${liste.length} coups)`;
+                'Total : ' + Cible.total(liste) + ' / ' + (liste.length * 10)
+                + (concours() ? ' — coups profonds : ' + Cible.totalProfond(liste) + ' / ' + (liste.length * 100) : '')
+                + ' (' + liste.length + ' coups)';
             const ol = document.getElementById('liste-coups');
             ol.innerHTML = '';
-            liste.forEach(c => {
+            liste.forEach(function (c) {
                 const li = document.createElement('li');
                 li.textContent = Cible.decrire(c);
                 ol.appendChild(li);
@@ -214,7 +244,19 @@
             Cible.dessiner(document.getElementById('apercu'), liste);
         }
 
-        document.addEventListener('DOMContentLoaded', majEtape);
+        // Si quelque chose ne marche pas (par ex. une vieille copie du script), on le dit.
+        function montrerErreur() {
+            document.getElementById('erreur-js').hidden = false;
+        }
+        window.addEventListener('error', montrerErreur);
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.Cible || !Cible.decrire) {
+                montrerErreur();
+                return;
+            }
+            majEtape();
+        });
     </script>
 
 </body>
