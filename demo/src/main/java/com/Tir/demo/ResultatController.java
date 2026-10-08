@@ -41,9 +41,9 @@ public class ResultatController {
 
     @PostMapping("/ajouter")
     public String ajouter(@RequestParam String date, @RequestParam int seanceId, @RequestParam int categorieId,
-                          @RequestParam int echelle, @RequestParam String coups) {
+                          @RequestParam(defaultValue = "false") boolean concours, @RequestParam String coups) {
         verifierSeanceEtCategorie(seanceId, categorieId);
-        donnees.resultats.add(new Resultat(donnees.nouvelId(), date, seanceId, categorieId, echelle, lireCoups(coups, echelle)));
+        donnees.resultats.add(new Resultat(donnees.nouvelId(), date, seanceId, categorieId, concours, lireCoups(coups, concours)));
         return "redirect:/resultats";
     }
 
@@ -67,11 +67,11 @@ public class ResultatController {
 
     @PostMapping("/{id}/modifier")
     public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int seanceId,
-                           @RequestParam int categorieId, @RequestParam int echelle, @RequestParam String coups) {
+                           @RequestParam int categorieId, @RequestParam(defaultValue = "false") boolean concours, @RequestParam String coups) {
         Resultat ancien = ClubDonnees.trouver(donnees.resultats, id);
         acces.verifierProprietaire(donnees.proprietaireSeance(ancien.getSeanceId()));
         verifierSeanceEtCategorie(seanceId, categorieId);
-        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, date, seanceId, categorieId, echelle, lireCoups(coups, echelle)));
+        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, date, seanceId, categorieId, concours, lireCoups(coups, concours)));
         return "redirect:/resultats/" + id;
     }
 
@@ -94,14 +94,12 @@ public class ResultatController {
         ClubDonnees.trouver(donnees.categories, categorieId);
     }
 
-    private List<String> lireCoups(String texte, int echelle) {
-        if (echelle != 10 && echelle != 100) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Échelle inconnue");
-        }
-        List<String> coups = Resultat.lireCoups(texte, echelle);
+    private List<String> lireCoups(String texte, boolean concours) {
+        List<String> coups = Resultat.lireCoups(texte, concours);
         if (coups == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Chaque coup doit être M (manqué) ou un nombre de 0 à " + echelle);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, concours
+                    ? "Chaque coup doit avoir ses points (0 à 10) et son coup profond (0 à 100), ou être M"
+                    : "Chaque coup doit avoir ses points (0 à 10), ou être M");
         }
         return coups;
     }

@@ -78,3 +78,11 @@ li form button[type=submit], .admin-actions form button[type=submit] {
 .cible-mini { width: 110px; height: 110px; display: inline-block; vertical-align: middle; margin-right: 8px; }
 .cible-apercu { width: 100%; max-width: 420px; aspect-ratio: 1; }
 .cible-grande { width: 100%; max-width: 600px; aspect-ratio: 1; border: 1px solid #ccc; touch-action: none; cursor: grab; }
+
+/* Flèches : 3 × 3, comme sur la feuille de résultat. */
+.clavier.fleches { grid-template-columns: repeat(3, 1fr); max-width: 320px; }
+.clavier.fleches button { font-size: 1.8em; }
+.clavier.fleches .sans-fleche { font-size: 0.8em; }
+.etape { font-weight: bold; min-height: 2.8em; }
+.liste-coups { columns: 3; padding-left: 1.6em; }
+.liste-coups li { margin: 2px 0; }
