@@ -15,11 +15,11 @@
 
     <p>
         <strong th:text="${resultat.score} + ' / ' + ${resultat.scoreMax}"></strong>
-        <span th:if="${resultat.concours}">— coups profonds :
+        <span th:if="${resultat.coupsProfonds}">— coups profonds :
             <strong th:text="${resultat.scoreProfond} + ' / ' + ${resultat.scoreProfondMax}"></strong></span>
         le <span th:text="${resultat.date}"></span>
         en <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
-        (<span th:text="${resultat.concours} ? 'concours' : 'entraînement'"></span>)
+
         — séance <span th:text="${@clubDonnees.nomSeance(resultat.seanceId)}"></span>
     </p>
 
@@ -37,7 +37,7 @@
     <ol>
         <li th:each="coup : ${resultat.coupsAffiches}" th:text="${coup}"></li>
     </ol>
-    <p><small>Chaque coup est placé dans l'anneau de ses points, dans la direction de sa flèche ; en concours, le coup profond donne la distance exacte au centre. Le numéro sur la cible est le numéro du coup.</small></p>
+    <p><small>Chaque coup est placé dans l'anneau de ses points, dans la direction de sa flèche ; avec les coups profonds, le coup profond donne la distance exacte au centre (100 = plein centre). Le numéro sur la cible est le numéro du coup.</small></p>
 
     <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}">Modifier</a> ·
     <a th:href="@{/resultats}">← Résultats</a>
