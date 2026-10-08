@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Classement</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2>Classement :</h2>
+
+    <a th:if="${admin}" th:href="@{/classement/ajouter}">+ Ajouter une ligne au classement</a>
+
+    <ul>
+        <li th:each="ligne : ${classements}">
+            Saison <span th:text="${@clubDonnees.nomSaison(ligne.saisonId)}"></span> :
+            <strong th:text="${ligne.position} + '.'"></strong>
+            <span th:text="${@clubDonnees.nomTireur(ligne.tireurId)}"></span>
+            — <span th:text="${ligne.points}"></span> points
+            <span th:if="${admin}">
+                <a th:href="@{/classement/{id}/modifier(id=${ligne.id})}">Modifier</a>
+                <form th:action="@{/classement/{id}/supprimer(id=${ligne.id})}" method="post" style="display:inline">
+                    <button type="submit">Supprimer</button>
+                </form>
+            </span>
+        </li>
+    </ul>
+
+</body>
+</html>

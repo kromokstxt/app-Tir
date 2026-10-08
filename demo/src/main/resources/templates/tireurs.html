@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Stand de tir</title>
+    <title>Tireurs</title>
 </head>
 <body>
 
-    <h1 th:text="${club.nom}">Stand de tir</h1>
-
-    <a th:href="@{/}">← Accueil</a><br>
-    <a th:href="@{/tireurs/ajouter}">+ Ajouter un tireur</a>
+    <div th:replace="~{fragments :: entete}"></div>
 
     <h2>Tireurs :</h2>
+
+    <a th:href="@{/tireurs/ajouter}">+ Ajouter un tireur</a>
 
     <ul>
         <li th:each="tireur : ${shooters}">
             <span th:text="${tireur.firstName}"></span>
             <span th:text="${tireur.lastName}"></span>
-            <a th:href="@{/tireurs/supprimer/{id}(id=${tireur.id})}">Supprimer</a>
+            (<span th:text="${tireur.username}"></span>)
+            <span th:if="${tireur.admin}">— admin</span>
+            <a th:href="@{/tireurs/{id}/modifier(id=${tireur.id})}">Modifier</a>
+            <form th:if="${tireur.id != moi.id}" th:action="@{/tireurs/{id}/supprimer(id=${tireur.id})}" method="post" style="display:inline">
+                <button type="submit">Supprimer</button>
+            </form>
         </li>
     </ul>
 

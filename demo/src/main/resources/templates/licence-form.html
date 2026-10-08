@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Licence</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${licence == null} ? 'Ajouter une licence' : 'Modifier une licence'">Licence</h2>
+
+    <form th:action="${licence == null} ? @{/licences/ajouter} : @{/licences/{id}/modifier(id=${licence.id})}" method="post">
+        <label>Numéro : <input type="text" name="numero" th:value="${licence?.numero}" required></label><br>
+        <label>Valable jusqu'au : <input type="date" name="dateValidite" th:value="${licence?.dateValidite}" required></label><br>
+        <label th:replace="~{fragments :: choixTireur(${licence?.tireurId})}"></label>
+        <button type="submit">Enregistrer</button>
+    </form>
+
+    <a th:href="@{/licences}">← Licences</a>
+
+</body>
+</html>

@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class Seance {
+public class Seance implements Identifiable {
 
     private int id;
     private int tireurId;

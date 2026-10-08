@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Classement</title>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2 th:text="${classement == null} ? 'Ajouter au classement' : 'Modifier le classement'">Classement</h2>
+
+    <p th:if="${#lists.isEmpty(@clubDonnees.saisons)}">Il faut d'abord qu'une saison existe (page Saisons).</p>
+
+    <form th:unless="${#lists.isEmpty(@clubDonnees.saisons)}"
+          th:action="${classement == null} ? @{/classement/ajouter} : @{/classement/{id}/modifier(id=${classement.id})}" method="post">
+        <label>Saison :
+            <select name="saisonId">
+                <option th:each="s : ${@clubDonnees.saisons}" th:value="${s.id}" th:text="${s.annee}"
+                        th:selected="${classement != null and s.id == classement.saisonId}"></option>
+            </select>
+        </label><br>
+        <label>Tireur :
+            <select name="tireurId">
+                <option th:each="t : ${@clubDonnees.tireurs}" th:value="${t.id}" th:text="${t.firstName + ' ' + t.lastName}"
+                        th:selected="${classement != null and t.id == classement.tireurId}"></option>
+            </select>
+        </label><br>
+        <label>Position : <input type="number" name="position" min="1" th:value="${classement?.position}" required></label><br>
+        <label>Points : <input type="number" name="points" th:value="${classement?.points}" required></label><br>
+        <button type="submit">Enregistrer</button>
+    </form>
+
+    <a th:href="@{/classement}">← Classement</a>
+
+</body>
+</html>

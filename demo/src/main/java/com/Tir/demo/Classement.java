@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class Classement {
+public class Classement implements Identifiable {
 
     private int id;
     private int position;

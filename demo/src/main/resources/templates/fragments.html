@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- En-tête de chaque page : le club, qui est connecté, se déconnecter -->
+    <div th:fragment="entete">
+        <h1 th:text="${club.nom}">Stand de tir</h1>
+        <p>
+            Connecté : <span th:text="${moi.firstName + ' ' + moi.lastName}"></span>
+            <span th:if="${admin}">(admin)</span>
+        </p>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Se déconnecter</button>
+        </form>
+        <a th:href="@{/}">← Accueil</a>
+        <hr>
+    </div>
+
+    <!-- Liste des tireurs, affichée seulement pour l'admin, qui choisit à qui appartient l'élément -->
+    <label th:fragment="choixTireur(selection)" th:if="${admin}">Tireur :
+        <select name="tireurId">
+            <option th:each="t : ${@clubDonnees.tireurs}" th:value="${t.id}"
+                    th:text="${t.firstName + ' ' + t.lastName}"
+                    th:selected="${selection == null ? t.id == moi.id : t.id == selection}"></option>
+        </select><br>
+    </label>
+
+</body>
+</html>

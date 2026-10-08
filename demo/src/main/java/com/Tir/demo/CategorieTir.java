@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class CategorieTir {
+public class CategorieTir implements Identifiable {
 
     private int id;
     private String nom;

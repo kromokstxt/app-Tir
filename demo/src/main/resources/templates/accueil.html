@@ -7,18 +7,27 @@
 <body>
 
     <h1 th:text="${club.nom}">Stand de tir</h1>
+    <p>
+        Connecté : <span th:text="${moi.firstName + ' ' + moi.lastName}"></span>
+        <span th:if="${admin}">(admin)</span>
+    </p>
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">Se déconnecter</button>
+    </form>
 
     <h2>Menu :</h2>
 
     <ul>
-        <li><a th:href="@{/tireurs}">Tireurs</a></li>
-        <li>Armes (bientôt)</li>
-        <li>Licences (bientôt)</li>
-        <li>Saisons (bientôt)</li>
-        <li>Séances (bientôt)</li>
-        <li>Résultats (bientôt)</li>
-        <li>Classement (bientôt)</li>
-        <li>Comité (bientôt)</li>
+        <li><a th:href="@{/profil}">Mon profil</a></li>
+        <li th:if="${admin}"><a th:href="@{/tireurs}">Tireurs</a></li>
+        <li><a th:href="@{/armes}" th:text="${admin} ? 'Armes' : 'Mes armes'">Armes</a></li>
+        <li><a th:href="@{/licences}" th:text="${admin} ? 'Licences' : 'Mes licences'">Licences</a></li>
+        <li><a th:href="@{/seances}" th:text="${admin} ? 'Séances' : 'Mes séances'">Séances</a></li>
+        <li><a th:href="@{/resultats}" th:text="${admin} ? 'Résultats' : 'Mes résultats'">Résultats</a></li>
+        <li><a th:href="@{/saisons}">Saisons</a></li>
+        <li><a th:href="@{/categories}">Catégories de tir</a></li>
+        <li><a th:href="@{/classement}">Classement</a></li>
+        <li><a th:href="@{/comite}">Comité</a></li>
     </ul>
 
 </body>

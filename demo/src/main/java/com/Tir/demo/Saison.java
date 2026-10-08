@@ -1,6 +1,6 @@
 package com.Tir.demo;
 
-public class Saison {
+public class Saison implements Identifiable {
 
     private int id;
     private String annee;
