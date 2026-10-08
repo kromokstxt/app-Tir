@@ -1,12 +1,20 @@
 // Dessine la cible du club (comme la vraie : anneaux 1 à 4 blancs, 5 à 10 sur le noir)
 // et place les coups d'une feuille de résultat dessus.
 // La cible fait 100 de rayon : l'anneau 1 va jusqu'à 100, l'anneau 10 jusqu'à 10.
-// On ne connaît que la valeur d'un coup, pas où il a touché : chaque coup est mis dans
-// son anneau, et les coups sont répartis tout autour pour ne pas se cacher.
+//
+// Un coup s'écrit « 9>HD » (9 points, flèche en haut à droite), « 9:87>HD » (avec le
+// coup profond 87, en concours), « 10 » (sans flèche) ou « M » (manqué).
+// - La flèche donne la direction depuis le centre.
+// - Le coup profond (100 = plein centre) donne la distance exacte au centre ;
+//   sans lui, le coup est mis au milieu de son anneau.
 (function () {
     const NS = 'http://www.w3.org/2000/svg';
     const MANQUE = 'M';
     const ANGLE_OR = 137.508 * Math.PI / 180;
+    // Angle de chaque flèche (0 = vers la droite, l'axe vertical de l'écran va vers le bas).
+    const ANGLES = { D: 0, BD: 45, B: 90, BG: 135, G: 180, HG: -135, H: -90, HD: -45 };
+    const FLECHES = { H: '↑', HD: '↗', D: '→', BD: '↘', B: '↓', BG: '↙', G: '←', HG: '↖' };
+    const MOTIF = /^(\d{1,2})(?::(\d{1,3}))?(?:>(H|HD|D|BD|B|BG|G|HG))?$/;
 
     function el(nom, attributs, parent) {
         const e = document.createElementNS(NS, nom);
@@ -15,25 +23,41 @@
         return e;
     }
 
-    // Distance au centre : 10 (ou 100) au centre, 0 juste en dehors de l'anneau 1.
-    function rayon(valeur, echelle) {
-        if (valeur === 0) return 105;
-        if (echelle === 10) return (10 - valeur + 0.5) * 10;
-        return Math.max(1, 100 - valeur + 0.5);
+    // « 9:87>HD » → { texte, points: 9, profond: 87, direction: 'HD' } ; null si illisible.
+    function lireCoup(texte) {
+        texte = texte.toUpperCase();
+        if (texte === MANQUE) return { texte, manque: true };
+        const m = MOTIF.exec(texte);
+        if (!m || Number(m[1]) > 10 || (m[2] !== undefined && Number(m[2]) > 100)) return null;
+        return { texte, points: Number(m[1]), profond: m[2] === undefined ? null : Number(m[2]), direction: m[3] || null };
     }
 
-    // « 10 9 M 8 » → ['10', '9', 'M', '8'] ; les coups impossibles sont ignorés.
-    function lireCoups(texte, echelle) {
-        return texte.trim().split(/[\s,;]+/).filter(c => c !== '').map(c => c.toUpperCase())
-            .filter(c => c === MANQUE || (/^\d+$/.test(c) && Number(c) <= echelle))
-            .map(c => c === MANQUE ? c : String(Number(c)));
+    function lireCoups(texte) {
+        return texte.trim().split(/\s+/).filter(c => c !== '').map(lireCoup).filter(c => c !== null);
     }
 
     function total(coups) {
-        return coups.filter(c => c !== MANQUE).reduce((somme, c) => somme + Number(c), 0);
+        return coups.filter(c => !c.manque).reduce((somme, c) => somme + c.points, 0);
     }
 
-    function dessiner(conteneur, echelle, coups) {
+    function totalProfond(coups) {
+        return coups.filter(c => !c.manque).reduce((somme, c) => somme + (c.profond ?? 0), 0);
+    }
+
+    // « 9 ↗ (87) »
+    function decrire(coup) {
+        if (coup.manque) return 'Manqué';
+        return `${coup.points}${coup.direction ? ' ' + FLECHES[coup.direction] : ''}${coup.profond !== null ? ' (' + coup.profond + ')' : ''}`;
+    }
+
+    // Distance au centre. Le coup reste toujours dans l'anneau de ses points.
+    function rayon(coup) {
+        const [min, max] = coup.points === 10 ? [0, 10] : coup.points === 0 ? [100, 110] : [(10 - coup.points) * 10, (11 - coup.points) * 10];
+        if (coup.profond === null) return coup.points === 10 ? 4 : (min + max) / 2;
+        return Math.min(max - 0.5, Math.max(min + 0.5, 100 - coup.profond));
+    }
+
+    function dessiner(conteneur, coups) {
         conteneur.innerHTML = '';
         const svg = el('svg', { viewBox: '-115 -115 230 230', role: 'img', 'aria-label': 'Cible' }, conteneur);
         el('rect', { x: -115, y: -115, width: 230, height: 230, fill: '#fff' }, svg);
@@ -57,13 +81,17 @@
             }
         }
 
-        coups.forEach((valeur, i) => {
-            if (valeur === MANQUE) return;
-            const r = rayon(Number(valeur), echelle);
-            const a = i * ANGLE_OR - Math.PI / 2;
+        const dejaVus = {};
+        coups.forEach((coup, i) => {
+            if (coup.manque) return;
+            const r = rayon(coup);
+            // Deux coups identiques sont un peu décalés pour qu'on voie les deux.
+            const n = dejaVus[coup.texte] = (dejaVus[coup.texte] ?? -1) + 1;
+            const decalage = (n % 2 ? 1 : -1) * Math.ceil(n / 2) * 9 * Math.PI / 180;
+            const a = (coup.direction ? ANGLES[coup.direction] * Math.PI / 180 : i * ANGLE_OR - Math.PI / 2) + decalage;
             const x = (r * Math.cos(a)).toFixed(1), y = (r * Math.sin(a)).toFixed(1);
             const g = el('g', { class: 'coup' }, svg);
-            el('title', {}, g).textContent = `Coup ${i + 1} : ${valeur}`;
+            el('title', {}, g).textContent = `Coup ${i + 1} : ${decrire(coup)}`;
             el('circle', { cx: x, cy: y, r: 3.2, fill: '#e8312a', stroke: '#fff', 'stroke-width': 0.5 }, g);
             const t = el('text', {
                 x, y, fill: '#fff', 'font-size': 3.2,
@@ -128,13 +156,12 @@
         return { zoomer, recentrer: () => { vue = { ...depart }; afficher(); } };
     }
 
-    window.Cible = { dessiner, lireCoups, total, rendreZoomable, MANQUE };
+    window.Cible = { dessiner, lireCoup, lireCoups, total, totalProfond, decrire, rendreZoomable, FLECHES, MANQUE };
 
-    // Toutes les cibles de la page : <div data-cible data-echelle="10" data-coups="10 9 M">.
+    // Toutes les cibles de la page : <div data-cible data-coups="10>H 9:87>BG M">.
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-cible]').forEach(c => {
-            const echelle = Number(c.dataset.echelle);
-            const svg = dessiner(c, echelle, lireCoups(c.dataset.coups || '', echelle));
+            const svg = dessiner(c, lireCoups(c.dataset.coups || ''));
             if (c.hasAttribute('data-zoom')) c.zoom = rendreZoomable(svg);
         });
     });

@@ -96,7 +96,7 @@ class AccesTests {
 
         mvc.perform(post("/resultats/ajouter").with(csrf())
                 .param("date", "2026-10-01").param("seanceId", "502").param("categorieId", "501")
-                .param("echelle", "10").param("coups", "10 9"))
+                .param("coups", "10>H 9>BG"))
                 .andExpect(status().isForbidden());
         assertThat(donnees.resultats).isEmpty();
     }
@@ -322,42 +322,67 @@ class AccesTests {
 
     @Test
     @WithUserDetails("tireur1")
-    void uneFeuilleDeResultatCalculeLeTotal() throws Exception {
+    void uneFeuilleDEntrainementGardeLesPointsEtLesFleches() throws Exception {
         donnees.saisons.add(new Saison(500, "2026", "2026-01-01", "2026-12-31"));
         donnees.seances.add(new Seance(502, idDe("tireur1"), 500, "2026-10-01", "Entraînement", "Villarepos"));
         int categorie = donnees.categories.get(0).getId();
 
+        // À l'entraînement, un coup profond éventuel est ignoré.
         mvc.perform(post("/resultats/ajouter").with(csrf())
                 .param("date", "2026-10-01").param("seanceId", "502").param("categorieId", "" + categorie)
-                .param("echelle", "10").param("coups", "10 9, m 0 8"))
-                .andExpect(redirectedUrl("/resultats"));
-        mvc.perform(post("/resultats/ajouter").with(csrf())
-                .param("date", "2026-10-01").param("seanceId", "502").param("categorieId", "" + categorie)
-                .param("echelle", "100").param("coups", "95 87 M 100"))
+                .param("concours", "false").param("coups", "10 9>hd m 0>B 8:77>G"))
                 .andExpect(redirectedUrl("/resultats"));
 
-        assertThat(donnees.resultats).extracting(Resultat::getScore, Resultat::getScoreMax)
-                .containsExactly(org.assertj.core.groups.Tuple.tuple(27, 50), org.assertj.core.groups.Tuple.tuple(282, 400));
-        assertThat(donnees.resultats.get(0).getCoups()).containsExactly("10", "9", "M", "0", "8");
+        Resultat feuille = donnees.resultats.get(0);
+        assertThat(feuille.isConcours()).isFalse();
+        assertThat(feuille.getScore()).isEqualTo(27);
+        assertThat(feuille.getScoreMax()).isEqualTo(50);
+        assertThat(feuille.getCoups()).containsExactly("10", "9>HD", "M", "0>B", "8>G");
+        assertThat(feuille.getCoupsAffiches()).containsExactly("10", "9 ↗", "Manqué", "0 ↓", "8 ←");
     }
 
     @Test
     @WithUserDetails("tireur1")
-    void unCoupHorsEchelleEstRefuse() throws Exception {
+    void uneFeuilleDeConcoursGardeLesCoupsProfonds() throws Exception {
+        donnees.saisons.add(new Saison(500, "2026", "2026-01-01", "2026-12-31"));
+        donnees.seances.add(new Seance(502, idDe("tireur1"), 500, "2026-10-01", "Concours", "Villarepos"));
+        int categorie = donnees.categories.get(0).getId();
+
+        mvc.perform(post("/resultats/ajouter").with(csrf())
+                .param("date", "2026-10-01").param("seanceId", "502").param("categorieId", "" + categorie)
+                .param("concours", "true").param("coups", "10:98>H 9:87>BD M"))
+                .andExpect(redirectedUrl("/resultats"));
+
+        Resultat feuille = donnees.resultats.get(0);
+        assertThat(feuille.isConcours()).isTrue();
+        assertThat(feuille.getScore()).isEqualTo(19);
+        assertThat(feuille.getScoreProfond()).isEqualTo(185);
+        assertThat(feuille.getScoreProfondMax()).isEqualTo(300);
+        assertThat(feuille.getCoupsAffiches()).containsExactly("10 ↑ (98)", "9 ↘ (87)", "Manqué");
+
+        mvc.perform(get("/resultats/" + feuille.getId()))
+                .andExpect(content().string(containsString("185 / 300")))
+                .andExpect(content().string(containsString("9 ↘ (87)")));
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void unCoupMalSaisiEstRefuse() throws Exception {
         donnees.saisons.add(new Saison(500, "2026", "2026-01-01", "2026-12-31"));
         donnees.seances.add(new Seance(502, idDe("tireur1"), 500, "2026-10-01", "Entraînement", "Villarepos"));
         int categorie = donnees.categories.get(0).getId();
 
-        for (String coups : new String[] {"10 11", "9 X", "", "-1"}) {
+        String[][] essais = {
+                {"false", "10 11"}, {"false", "9 X"}, {"false", ""}, {"false", "-1"}, {"false", "9>Z"},
+                // En concours, chaque coup touché doit avoir son coup profond, jusqu'à 100.
+                {"true", "9>H"}, {"true", "9:101>H"},
+        };
+        for (String[] essai : essais) {
             mvc.perform(post("/resultats/ajouter").with(csrf())
                     .param("date", "2026-10-01").param("seanceId", "502").param("categorieId", "" + categorie)
-                    .param("echelle", "10").param("coups", coups))
+                    .param("concours", essai[0]).param("coups", essai[1]))
                     .andExpect(status().isBadRequest());
         }
-        mvc.perform(post("/resultats/ajouter").with(csrf())
-                .param("date", "2026-10-01").param("seanceId", "502").param("categorieId", "" + categorie)
-                .param("echelle", "50").param("coups", "10"))
-                .andExpect(status().isBadRequest());
         assertThat(donnees.resultats).isEmpty();
     }
 
@@ -376,17 +401,19 @@ class AccesTests {
         mvc.perform(get("/resultats/603"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("19 / 40")))
-                .andExpect(content().string(containsString("data-coups=\"10 9 M 0\"")))
+                .andExpect(content().string(containsString("data-coups=\"10&gt;H 9&gt;BG M 0\"")))
                 .andExpect(content().string(containsString("data-zoom")))
                 .andExpect(content().string(containsString("Manqué")));
         // Liste : une petite cible par résultat.
         mvc.perform(get("/resultats"))
                 .andExpect(content().string(containsString("cible-mini")))
-                .andExpect(content().string(containsString("data-coups=\"10 9 M 0\"")));
+                .andExpect(content().string(containsString("data-coups=\"10&gt;H 9&gt;BG M 0\"")));
         // Formulaire : le clavier et l'aperçu de la cible.
         mvc.perform(get("/resultats/ajouter"))
                 .andExpect(content().string(containsString("id=\"apercu\"")))
-                .andExpect(content().string(containsString("ajouterCoup('M')")));
+                .andExpect(content().string(containsString("ajouter('M')")))
+                .andExpect(content().string(containsString("choisirDirection('HD')")))
+                .andExpect(content().string(containsString("Concours (coups profonds)")));
         mvc.perform(get("/cible.js")).andExpect(status().isOk());
     }
 
@@ -420,7 +447,7 @@ class AccesTests {
         donnees.armes.add(new Arme(600, "Fas 90", "", t1));
         donnees.licences.add(new Licence(601, "12345", "2027-12-31", t1));
         donnees.seances.add(new Seance(602, t1, 604, "2026-10-01", "Entraînement", "Villarepos"));
-        donnees.resultats.add(new Resultat(603, "2026-10-01", 602, 605, 10, List.of("10", "9", "M", "0")));
+        donnees.resultats.add(new Resultat(603, "2026-10-01", 602, 605, false, List.of("10>H", "9>BG", "M", "0")));
         donnees.saisons.add(new Saison(604, "2026", "2026-01-01", "2026-12-31"));
         donnees.categories.add(new CategorieTir(605, "Fusil 300m", 300));
         donnees.classements.add(new Classement(606, 1, 95, 604, t1));

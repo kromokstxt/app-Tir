@@ -34,50 +34,62 @@
         <label>Date : <input type="date" name="date" th:value="${resultat?.date ?: aujourdhui}" required></label>
 
         <div class="choix-echelle">
-            Notation :
-            <label><input type="radio" name="echelle" value="10" onchange="changerEchelle()"
-                          th:checked="${resultat == null or resultat.echelle == 10}"> 0 à 10</label>
-            <label><input type="radio" name="echelle" value="100" onchange="changerEchelle()"
-                          th:checked="${resultat != null and resultat.echelle == 100}"> 0 à 100</label>
+            Type :
+            <label><input type="radio" name="concours" value="false" onchange="changerType()"
+                          th:checked="${resultat == null or !resultat.concours}"> Entraînement</label>
+            <label><input type="radio" name="concours" value="true" onchange="changerType()"
+                          th:checked="${resultat != null and resultat.concours}"> Concours (coups profonds)</label>
         </div>
 
         <h3>Les coups</h3>
-        <p><small>Touchez la valeur de chaque coup, dans l'ordre. M = manqué.</small></p>
+        <p class="etape" id="consigne"></p>
 
-        <!-- Notation 0 à 10 : un bouton par valeur, un toucher = un coup -->
-        <div class="clavier" id="clavier-10">
-            <button type="button" onclick="ajouterCoup('10')">10</button>
-            <button type="button" onclick="ajouterCoup('9')">9</button>
-            <button type="button" onclick="ajouterCoup('8')">8</button>
-            <button type="button" onclick="ajouterCoup('7')">7</button>
-            <button type="button" onclick="ajouterCoup('6')">6</button>
-            <button type="button" onclick="ajouterCoup('5')">5</button>
-            <button type="button" onclick="ajouterCoup('4')">4</button>
-            <button type="button" onclick="ajouterCoup('3')">3</button>
-            <button type="button" onclick="ajouterCoup('2')">2</button>
-            <button type="button" onclick="ajouterCoup('1')">1</button>
-            <button type="button" onclick="ajouterCoup('0')">0</button>
-            <button type="button" class="manque" onclick="ajouterCoup('M')">M</button>
+        <!-- Étape 1 : les points du coup -->
+        <div class="clavier" id="etape-points">
+            <button type="button" onclick="choisirPoints('10')">10</button>
+            <button type="button" onclick="choisirPoints('9')">9</button>
+            <button type="button" onclick="choisirPoints('8')">8</button>
+            <button type="button" onclick="choisirPoints('7')">7</button>
+            <button type="button" onclick="choisirPoints('6')">6</button>
+            <button type="button" onclick="choisirPoints('5')">5</button>
+            <button type="button" onclick="choisirPoints('4')">4</button>
+            <button type="button" onclick="choisirPoints('3')">3</button>
+            <button type="button" onclick="choisirPoints('2')">2</button>
+            <button type="button" onclick="choisirPoints('1')">1</button>
+            <button type="button" onclick="choisirPoints('0')">0</button>
+            <button type="button" class="manque" onclick="ajouter('M')">M</button>
         </div>
 
-        <!-- Notation 0 à 100 : on tape le nombre puis OK -->
-        <div id="clavier-100" hidden>
-            <div class="saisie-en-cours" id="en-cours"></div>
+        <!-- Étape 2 (concours) : le coup profond, sur 100 -->
+        <div id="etape-profond" hidden>
+            <div class="saisie-en-cours" id="profond-en-cours"></div>
             <div class="clavier">
                 <button type="button" onclick="chiffre('7')">7</button>
                 <button type="button" onclick="chiffre('8')">8</button>
                 <button type="button" onclick="chiffre('9')">9</button>
-                <button type="button" class="manque" onclick="ajouterCoup('M')">M</button>
+                <button type="button" onclick="profond = profond.slice(0, -1); majEtape()">⌫</button>
                 <button type="button" onclick="chiffre('4')">4</button>
                 <button type="button" onclick="chiffre('5')">5</button>
                 <button type="button" onclick="chiffre('6')">6</button>
-                <button type="button" onclick="enCours = enCours.slice(0, -1); majEnCours()">⌫</button>
+                <button type="button" class="ok" onclick="validerProfond()" style="grid-row: span 3">OK</button>
                 <button type="button" onclick="chiffre('1')">1</button>
                 <button type="button" onclick="chiffre('2')">2</button>
                 <button type="button" onclick="chiffre('3')">3</button>
-                <button type="button" class="ok" onclick="validerNombre()" style="grid-row: span 2">OK</button>
                 <button type="button" onclick="chiffre('0')" style="grid-column: span 3">0</button>
             </div>
+        </div>
+
+        <!-- Étape 3 : la flèche (direction depuis le centre) -->
+        <div class="clavier fleches" id="etape-direction" hidden>
+            <button type="button" onclick="choisirDirection('HG')">↖</button>
+            <button type="button" onclick="choisirDirection('H')">↑</button>
+            <button type="button" onclick="choisirDirection('HD')">↗</button>
+            <button type="button" onclick="choisirDirection('G')">←</button>
+            <button type="button" class="sans-fleche" onclick="choisirDirection('')">pas de<br>flèche</button>
+            <button type="button" onclick="choisirDirection('D')">→</button>
+            <button type="button" onclick="choisirDirection('BG')">↙</button>
+            <button type="button" onclick="choisirDirection('B')">↓</button>
+            <button type="button" onclick="choisirDirection('BD')">↘</button>
         </div>
 
         <p>
@@ -87,11 +99,9 @@
 
         <p><strong id="total">Total : 0</strong></p>
         <div class="cible cible-apercu" id="apercu"></div>
+        <ol id="liste-coups" class="liste-coups"></ol>
 
-        <label>Feuille de résultat (vous pouvez aussi la corriger ici) :
-            <textarea name="coups" id="coups" rows="2" required oninput="majApercu()"
-                      th:text="${resultat?.coupsTexte}"></textarea>
-        </label>
+        <input type="hidden" name="coups" id="coups" th:value="${resultat?.coupsTexte}">
 
         <button type="submit">Enregistrer</button>
     </form>
@@ -99,64 +109,112 @@
     <a th:href="@{/resultats}">← Résultats</a>
 
     <script>
+        // Chaque coup se saisit en touchant : les points, puis (en concours) le coup profond, puis la flèche.
         const champ = document.getElementById('coups');
-        let enCours = '';
+        let etape = 'points';  // 'points', 'profond' ou 'direction'
+        let points = '';       // points du coup en cours
+        let profond = '';      // coup profond du coup en cours (concours)
 
-        function echelle() {
-            return Number(document.querySelector('input[name=echelle]:checked').value);
+        function concours() {
+            return document.querySelector('input[name=concours]:checked').value === 'true';
         }
 
         function coups() {
-            return Cible.lireCoups(champ.value, echelle());
+            return Cible.lireCoups(champ.value);
         }
 
-        function ecrire(liste) {
-            champ.value = liste.join(' ');
-            majApercu();
+        function recommencerCoup() {
+            etape = 'points';
+            points = '';
+            profond = '';
         }
 
-        function ajouterCoup(valeur) {
-            ecrire([...coups(), valeur]);
+        function ajouter(texte) {
+            champ.value = [...coups().map(c => c.texte), texte].join(' ');
+            recommencerCoup();
+            majEtape();
         }
 
-        function retirerDernier() {
-            ecrire(coups().slice(0, -1));
-        }
-
-        function toutEffacer() {
-            if (coups().length === 0 || confirm('Effacer tous les coups ?')) ecrire([]);
+        function choisirPoints(p) {
+            points = p;
+            etape = concours() ? 'profond' : 'direction';
+            majEtape();
         }
 
         function chiffre(c) {
-            if ((enCours + c).length <= 3 && Number(enCours + c) <= 100) enCours += c;
-            majEnCours();
+            if ((profond + c).length <= 3 && Number(profond + c) <= 100) profond += c;
+            majEtape();
         }
 
-        function majEnCours() {
-            document.getElementById('en-cours').textContent = enCours;
+        function validerProfond() {
+            if (profond === '') return;
+            etape = 'direction';
+            majEtape();
         }
 
-        function validerNombre() {
-            if (enCours === '') return;
-            ajouterCoup(String(Number(enCours)));
-            enCours = '';
-            majEnCours();
+        function choisirDirection(direction) {
+            let texte = points;
+            if (concours()) texte += ':' + Number(profond);
+            if (direction) texte += '>' + direction;
+            ajouter(texte);
         }
 
-        function changerEchelle() {
-            document.getElementById('clavier-10').hidden = echelle() !== 10;
-            document.getElementById('clavier-100').hidden = echelle() !== 100;
-            majApercu();
+        function retirerDernier() {
+            if (etape !== 'points') {
+                recommencerCoup();      // annule le coup en cours
+            } else {
+                champ.value = coups().slice(0, -1).map(c => c.texte).join(' ');
+            }
+            majEtape();
         }
 
-        function majApercu() {
+        function toutEffacer() {
+            if (coups().length === 0 || confirm('Effacer tous les coups ?')) {
+                champ.value = '';
+                recommencerCoup();
+                majEtape();
+            }
+        }
+
+        function changerType() {
+            // Les coups n'ont pas les mêmes infos : changer de type recommence la saisie.
+            if (coups().length > 0 && !confirm('Changer de type efface les coups déjà saisis. Continuer ?')) {
+                document.querySelector(`input[name=concours][value="${!concours()}"]`).checked = true;
+                return;
+            }
+            champ.value = '';
+            recommencerCoup();
+            majEtape();
+        }
+
+        // Montre l'étape en cours, la consigne, le total, la liste des coups et la cible.
+        function majEtape() {
+            const numero = coups().length + 1;
+            document.getElementById('etape-points').hidden = etape !== 'points';
+            document.getElementById('etape-profond').hidden = etape !== 'profond';
+            document.getElementById('etape-direction').hidden = etape !== 'direction';
+            document.getElementById('profond-en-cours').textContent = profond;
+            document.getElementById('consigne').textContent =
+                etape === 'points' ? `Coup ${numero} : touchez les points (M = manqué).`
+                : etape === 'profond' ? `Coup ${numero} : ${points} points — tapez le coup profond (sur 100) puis OK.`
+                : `Coup ${numero} : ${points} points${concours() ? ' (' + Number(profond) + ')' : ''} — touchez la flèche.`;
+
             const liste = coups();
             document.getElementById('total').textContent =
-                `Total : ${Cible.total(liste)} / ${liste.length * echelle()} (${liste.length} coups)`;
-            Cible.dessiner(document.getElementById('apercu'), echelle(), liste);
+                `Total : ${Cible.total(liste)} / ${liste.length * 10}`
+                + (concours() ? ` — coups profonds : ${Cible.totalProfond(liste)} / ${liste.length * 100}` : '')
+                + ` (${liste.length} coups)`;
+            const ol = document.getElementById('liste-coups');
+            ol.innerHTML = '';
+            liste.forEach(c => {
+                const li = document.createElement('li');
+                li.textContent = Cible.decrire(c);
+                ol.appendChild(li);
+            });
+            Cible.dessiner(document.getElementById('apercu'), liste);
         }
 
-        document.addEventListener('DOMContentLoaded', changerEchelle);
+        document.addEventListener('DOMContentLoaded', majEtape);
     </script>
 
 </body>
