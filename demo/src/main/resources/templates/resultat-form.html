@@ -16,7 +16,6 @@
 
     <form th:unless="${#lists.isEmpty(mesSeances) or #lists.isEmpty(@clubDonnees.categories)}"
           th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post">
-        <label>Score : <input type="number" name="score" th:value="${resultat?.score}" required></label><br>
         <label>Date : <input type="date" name="date" th:value="${resultat?.date}" required></label><br>
         <label>Séance :
             <select name="seanceId">
@@ -30,6 +29,17 @@
                         th:selected="${resultat != null and c.id == resultat.categorieId}"></option>
             </select>
         </label><br>
+        <label>Notation :
+            <select name="echelle">
+                <option value="10" th:selected="${resultat == null or resultat.echelle == 10}">0 à 10</option>
+                <option value="100" th:selected="${resultat != null and resultat.echelle == 100}">0 à 100</option>
+            </select>
+        </label><br>
+        <label>Feuille de résultat (un coup après l'autre, M = manqué) :<br>
+            <textarea name="coups" rows="3" cols="60" placeholder="10 9 9 M 8 10" required
+                      th:text="${resultat?.coupsTexte}"></textarea>
+        </label><br>
+        <small>Le total est calculé automatiquement.</small><br>
         <button type="submit">Enregistrer</button>
     </form>
 

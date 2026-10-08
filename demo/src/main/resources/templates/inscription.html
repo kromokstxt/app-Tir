@@ -21,10 +21,37 @@
             <input type="text" name="licence" th:value="${licence}" minlength="6" maxlength="6">
         </label><br>
         <small>votre numéro utilisé pour le politronique au stand</small><br>
+
+        <h3>Mes armes (facultatif, jusqu'à 4)</h3>
+        <!-- 4 lignes : la première est visible, le bouton fait apparaître les suivantes. -->
+        <div th:each="ligne, etat : ${lignesArme}" class="ligne-arme"
+             th:hidden="${etat.index > 0 and #strings.isEmpty(ligne[0])}">
+            <label>Modèle : <input type="text" name="modele" th:value="${ligne[0]}" placeholder="Fas 90 n° 123"></label>
+            <label>Catégorie :
+                <select name="categorie">
+                    <option th:each="c : ${categoriesArme}" th:value="${c}" th:text="${c}"
+                            th:selected="${c == ligne[1]}"></option>
+                </select>
+            </label>
+        </div>
+        <button type="button" id="ajouter-arme" onclick="ajouterArme()">+ Ajouter une arme</button><br><br>
+
         <button type="submit">Créer mon compte</button>
     </form>
 
     <p><a th:href="@{/login}">← Retour à la connexion</a></p>
+
+    <script>
+        // Affiche la ligne d'arme suivante ; le bouton disparaît quand les 4 sont visibles.
+        function ajouterArme() {
+            const cachees = document.querySelectorAll('.ligne-arme[hidden]');
+            if (cachees.length > 0) cachees[0].hidden = false;
+            if (cachees.length <= 1) document.getElementById('ajouter-arme').hidden = true;
+        }
+        if (document.querySelectorAll('.ligne-arme[hidden]').length === 0) {
+            document.getElementById('ajouter-arme').hidden = true;
+        }
+    </script>
 
 </body>
 </html>

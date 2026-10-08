@@ -1,5 +1,6 @@
 package com.Tir.demo;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -37,11 +39,22 @@ public class ResultatController {
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam int score, @RequestParam String date,
-                          @RequestParam int seanceId, @RequestParam int categorieId) {
+    public String ajouter(@RequestParam String date, @RequestParam int seanceId, @RequestParam int categorieId,
+                          @RequestParam int echelle, @RequestParam String coups) {
         verifierSeanceEtCategorie(seanceId, categorieId);
-        donnees.resultats.add(new Resultat(donnees.nouvelId(), score, date, seanceId, categorieId));
+        donnees.resultats.add(new Resultat(donnees.nouvelId(), date, seanceId, categorieId, echelle, lireCoups(coups, echelle)));
         return "redirect:/resultats";
+    }
+
+    // Voir la feuille de résultat sur la cible.
+    @GetMapping("/{id}")
+    public String voir(@PathVariable int id, Model model) {
+        Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
+        acces.verifierProprietaire(donnees.proprietaireSeance(resultat.getSeanceId()));
+        model.addAttribute("resultat", resultat);
+        model.addAttribute("coups", Cible.placer(resultat));
+        model.addAttribute("numeros", Cible.numeros());
+        return "resultat";
     }
 
     @GetMapping("/{id}/modifier")
@@ -54,13 +67,13 @@ public class ResultatController {
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam int score, @RequestParam String date,
-                           @RequestParam int seanceId, @RequestParam int categorieId) {
+    public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int seanceId,
+                           @RequestParam int categorieId, @RequestParam int echelle, @RequestParam String coups) {
         Resultat ancien = ClubDonnees.trouver(donnees.resultats, id);
         acces.verifierProprietaire(donnees.proprietaireSeance(ancien.getSeanceId()));
         verifierSeanceEtCategorie(seanceId, categorieId);
-        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, score, date, seanceId, categorieId));
-        return "redirect:/resultats";
+        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, date, seanceId, categorieId, echelle, lireCoups(coups, echelle)));
+        return "redirect:/resultats/" + id;
     }
 
     @PostMapping("/{id}/supprimer")
@@ -78,5 +91,17 @@ public class ResultatController {
     private void verifierSeanceEtCategorie(int seanceId, int categorieId) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.seances, seanceId).getTireurId());
         ClubDonnees.trouver(donnees.categories, categorieId);
+    }
+
+    private List<String> lireCoups(String texte, int echelle) {
+        if (echelle != 10 && echelle != 100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Échelle inconnue");
+        }
+        List<String> coups = Resultat.lireCoups(texte, echelle);
+        if (coups == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Chaque coup doit être M (manqué) ou un nombre de 0 à " + echelle);
+        }
+        return coups;
     }
 }

@@ -15,10 +15,12 @@
 
     <ul>
         <li th:each="resultat : ${resultats}">
-            <strong th:text="${resultat.score}"></strong> points le
+            <strong th:text="${resultat.score} + ' / ' + ${resultat.scoreMax}"></strong>
+            (<span th:text="${#lists.size(resultat.coups)}"></span> coups) le
             <span th:text="${resultat.date}"></span>
             en <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
             — séance <span th:text="${@clubDonnees.nomSeance(resultat.seanceId)}"></span>
+            <a th:href="@{/resultats/{id}(id=${resultat.id})}">Voir la cible</a>
             <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}">Modifier</a>
             <form th:action="@{/resultats/{id}/supprimer(id=${resultat.id})}" method="post" style="display:inline">
                 <button type="submit">Supprimer</button>
