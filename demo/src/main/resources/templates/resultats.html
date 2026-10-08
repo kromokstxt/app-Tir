@@ -21,7 +21,7 @@
             <a th:href="@{/resultats/{id}(id=${resultat.id})}" class="cible cible-mini" data-cible
                th:attr="data-coups=${resultat.coupsTexte}"></a>
             <strong th:text="${resultat.score} + ' / ' + ${resultat.scoreMax}"></strong>
-            <span th:if="${resultat.concours}" th:text="'(' + ${resultat.scoreProfond} + ' en coups profonds)'"></span>
+            <span th:if="${resultat.coupsProfonds}" th:text="'(' + ${resultat.scoreProfond} + ' en coups profonds)'"></span>
             (<span th:text="${#lists.size(resultat.coups)}"></span> coups) le
             <span th:text="${resultat.date}"></span>
             en <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>

@@ -41,9 +41,9 @@ public class ResultatController {
 
     @PostMapping("/ajouter")
     public String ajouter(@RequestParam String date, @RequestParam int seanceId, @RequestParam int categorieId,
-                          @RequestParam(defaultValue = "false") boolean concours, @RequestParam String coups) {
+                          @RequestParam(defaultValue = "false") boolean coupsProfonds, @RequestParam String coups) {
         verifierSeanceEtCategorie(seanceId, categorieId);
-        donnees.resultats.add(new Resultat(donnees.nouvelId(), date, seanceId, categorieId, concours, lireCoups(coups, concours)));
+        donnees.resultats.add(new Resultat(donnees.nouvelId(), date, seanceId, categorieId, coupsProfonds, lireCoups(coups, coupsProfonds)));
         return "redirect:/resultats";
     }
 
@@ -67,11 +67,11 @@ public class ResultatController {
 
     @PostMapping("/{id}/modifier")
     public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int seanceId,
-                           @RequestParam int categorieId, @RequestParam(defaultValue = "false") boolean concours, @RequestParam String coups) {
+                           @RequestParam int categorieId, @RequestParam(defaultValue = "false") boolean coupsProfonds, @RequestParam String coups) {
         Resultat ancien = ClubDonnees.trouver(donnees.resultats, id);
         acces.verifierProprietaire(donnees.proprietaireSeance(ancien.getSeanceId()));
         verifierSeanceEtCategorie(seanceId, categorieId);
-        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, date, seanceId, categorieId, concours, lireCoups(coups, concours)));
+        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, date, seanceId, categorieId, coupsProfonds, lireCoups(coups, coupsProfonds)));
         return "redirect:/resultats/" + id;
     }
 
@@ -94,11 +94,11 @@ public class ResultatController {
         ClubDonnees.trouver(donnees.categories, categorieId);
     }
 
-    private List<String> lireCoups(String texte, boolean concours) {
-        List<String> coups = Resultat.lireCoups(texte, concours);
+    private List<String> lireCoups(String texte, boolean coupsProfonds) {
+        List<String> coups = Resultat.lireCoups(texte, coupsProfonds);
         if (coups == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, concours
-                    ? "Chaque coup doit avoir ses points (0 à 10) et son coup profond (0 à 100), ou être M"
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, coupsProfonds
+                    ? "Chaque coup doit avoir son coup profond (0 à 100), ou être M"
                     : "Chaque coup doit avoir ses points (0 à 10), ou être M");
         }
         return coups;

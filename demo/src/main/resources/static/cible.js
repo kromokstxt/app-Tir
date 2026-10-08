@@ -2,8 +2,8 @@
 // et place les coups d'une feuille de résultat dessus.
 // La cible fait 100 de rayon : l'anneau 1 va jusqu'à 100, l'anneau 10 jusqu'à 10.
 //
-// Un coup s'écrit « 9>HD » (9 points, flèche en haut à droite), « 9:87>HD » (avec le
-// coup profond 87, en concours), « 10 » (sans flèche) ou « M » (manqué).
+// Un coup s'écrit « 9>HD » (9 points, flèche en haut à droite), « 9:87>HD » (coup
+// profond 87, donc 9 points), « 10 » (sans flèche) ou « M » (manqué).
 // - La flèche donne la direction depuis le centre.
 // - Le coup profond (100 = plein centre) donne la distance exacte au centre ;
 //   sans lui, le coup est mis au milieu de son anneau.
@@ -30,6 +30,11 @@
         const m = MOTIF.exec(texte);
         if (!m || Number(m[1]) > 10 || (m[2] !== undefined && Number(m[2]) > 100)) return null;
         return { texte, points: Number(m[1]), profond: m[2] === undefined ? null : Number(m[2]), direction: m[3] || null };
+    }
+
+    // Mêmes points que côté serveur : 91 à 100 → 10, 81 à 90 → 9, …, 0 → 0.
+    function pointsDepuisProfond(profond) {
+        return Math.floor((profond + 9) / 10);
     }
 
     function lireCoups(texte) {
@@ -156,7 +161,7 @@
         return { zoomer, recentrer: () => { vue = { ...depart }; afficher(); } };
     }
 
-    window.Cible = { dessiner, lireCoup, lireCoups, total, totalProfond, decrire, rendreZoomable, FLECHES, MANQUE };
+    window.Cible = { dessiner, lireCoup, lireCoups, total, totalProfond, decrire, pointsDepuisProfond, rendreZoomable, FLECHES, MANQUE };
 
     // Toutes les cibles de la page : <div data-cible data-coups="10>H 9:87>BG M">.
     document.addEventListener('DOMContentLoaded', () => {

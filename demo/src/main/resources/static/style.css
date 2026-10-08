@@ -90,3 +90,6 @@ li form button[type=submit], .admin-actions form button[type=submit] {
 .sous-titre { margin: 10px 0 0; }
 .clavier button:disabled { opacity: 0.35; cursor: default; }
 .erreur { background: #fde8e8; border: 1px solid #a01818; color: #a01818; padding: 10px; border-radius: 6px; }
+
+label.option { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+label.option input { width: 24px; height: 24px; }
