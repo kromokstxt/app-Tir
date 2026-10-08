@@ -1,5 +1,6 @@
 package com.Tir.demo;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 @Controller
 @RequestMapping("/licences")
@@ -32,8 +34,9 @@ public class LicenceController {
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam String numero, @RequestParam String dateValidite,
+    public String ajouter(@RequestParam String numero, @RequestParam(defaultValue = "") String dateValidite,
                           @RequestParam(required = false) Integer tireurId) {
+        verifierNumero(numero);
         donnees.licences.add(new Licence(donnees.nouvelId(), numero, dateValidite, acces.proprietaire(tireurId)));
         return "redirect:/licences";
     }
@@ -47,9 +50,10 @@ public class LicenceController {
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam String numero, @RequestParam String dateValidite,
+    public String modifier(@PathVariable int id, @RequestParam String numero, @RequestParam(defaultValue = "") String dateValidite,
                            @RequestParam(required = false) Integer tireurId) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.licences, id).getTireurId());
+        verifierNumero(numero);
         ClubDonnees.remplacer(donnees.licences, new Licence(id, numero, dateValidite, acces.proprietaire(tireurId)));
         return "redirect:/licences";
     }
@@ -59,5 +63,11 @@ public class LicenceController {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.licences, id).getTireurId());
         ClubDonnees.supprimer(donnees.licences, id);
         return "redirect:/licences";
+    }
+
+    private void verifierNumero(String numero) {
+        if (!Licence.numeroValide(numero)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Le numéro de licence doit faire 6 caractères");
+        }
     }
 }

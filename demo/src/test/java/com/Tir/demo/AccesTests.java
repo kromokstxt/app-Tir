@@ -68,14 +68,14 @@ class AccesTests {
     void uneArmeAjouteeAppartientToujoursAuTireurConnecte() throws Exception {
         // Même s'il essaie de la mettre au nom de tireur2.
         mvc.perform(post("/armes/ajouter").with(csrf())
-                .param("modele", "SIG 550").param("categorie", "Fusil").param("tireurId", "" + idDe("tireur2")));
+                .param("modele", "SIG 550").param("categorie", "Fas 90").param("tireurId", "" + idDe("tireur2")));
         assertThat(donnees.armes).singleElement().extracting(Arme::getTireurId).isEqualTo(idDe("tireur1"));
     }
 
     @Test
     @WithUserDetails("tireur2")
     void unTireurNeVoitNiNeModifieLesArmesDesAutres() throws Exception {
-        donnees.armes.add(new Arme(500, "SIG 550", "Fusil", idDe("tireur1")));
+        donnees.armes.add(new Arme(500, "SIG 550", "Fas 90", idDe("tireur1")));
 
         mvc.perform(get("/armes")).andExpect(status().isOk()).andExpect(content().string(not(containsString("SIG 550"))));
         mvc.perform(get("/armes/500/modifier")).andExpect(status().isForbidden());
@@ -101,11 +101,11 @@ class AccesTests {
     @Test
     @WithUserDetails("admin")
     void lAdminVoitEtModifieLesDonneesDeTous() throws Exception {
-        donnees.armes.add(new Arme(500, "SIG 550", "Fusil", idDe("tireur1")));
+        donnees.armes.add(new Arme(500, "SIG 550", "Fas 90", idDe("tireur1")));
 
         mvc.perform(get("/armes")).andExpect(content().string(containsString("SIG 550")));
         mvc.perform(post("/armes/500/modifier").with(csrf())
-                .param("modele", "SIG 551").param("categorie", "Fusil").param("tireurId", "" + idDe("tireur1")))
+                .param("modele", "SIG 551").param("categorie", "Fas 90").param("tireurId", "" + idDe("tireur1")))
                 .andExpect(redirectedUrl("/armes"));
         assertThat(donnees.armes).singleElement().extracting(Arme::getModele).isEqualTo("SIG 551");
     }
@@ -117,11 +117,16 @@ class AccesTests {
         mvc.perform(post("/saisons/ajouter").with(csrf())
                 .param("annee", "2026").param("dateDebut", "2026-01-01").param("dateFin", "2026-12-31"))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/comite/ajouter").with(csrf())
-                .param("prenom", "A").param("nom", "B").param("fonction", "Président"))
+        mvc.perform(post("/annonces/ajouter").with(csrf())
+                .param("titre", "A").param("message", "B").param("date", "2026-10-01"))
+                .andExpect(status().isForbidden());
+        mvc.perform(get("/calendrier")).andExpect(status().isOk());
+        mvc.perform(post("/calendrier/ajouter").with(csrf())
+                .param("date", "2026-10-10").param("titre", "Tir obligatoire"))
                 .andExpect(status().isForbidden());
         assertThat(donnees.saisons).isEmpty();
-        assertThat(donnees.comite).isEmpty();
+        assertThat(donnees.annonces).isEmpty();
+        assertThat(donnees.calendrier).isEmpty();
     }
 
     @Test
@@ -148,13 +153,94 @@ class AccesTests {
         }
     }
 
+    @Test
+    void onPeutCreerSonCompteAvecSaLicence() throws Exception {
+        mvc.perform(get("/inscription")).andExpect(status().isOk())
+                .andExpect(content().string(containsString("votre numéro utilisé pour le politronique au stand")));
+        mvc.perform(post("/inscription").with(csrf())
+                .param("firstName", "Jean").param("lastName", "Dupont")
+                .param("username", "jdupont").param("password", "secret").param("licence", "AB1234"))
+                .andExpect(redirectedUrl("/login?inscrit"));
+
+        Shooter nouveau = donnees.tireurParUsername("jdupont");
+        assertThat(nouveau.isAdmin()).isFalse();
+        assertThat(donnees.licences).singleElement().satisfies(l -> {
+            assertThat(l.getNumero()).isEqualTo("AB1234");
+            assertThat(l.getTireurId()).isEqualTo(nouveau.getId());
+        });
+        mvc.perform(formLogin().user("jdupont").password("secret")).andExpect(redirectedUrl("/"));
+    }
+
+    @Test
+    void inscriptionRefuseeSiLicenceInvalideOuNomDejaPris() throws Exception {
+        mvc.perform(post("/inscription").with(csrf())
+                .param("firstName", "A").param("lastName", "B")
+                .param("username", "nouveau").param("password", "x").param("licence", "12345"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("6 caractères")));
+        mvc.perform(post("/inscription").with(csrf())
+                .param("firstName", "A").param("lastName", "B")
+                .param("username", "tireur1").param("password", "x"))
+                .andExpect(content().string(containsString("déjà pris")));
+        assertThat(donnees.tireurParUsername("nouveau")).isNull();
+        assertThat(donnees.tireurs).hasSize(3);
+    }
+
+    @Test
+    void onNePeutPasSInscrireCommeAdmin() throws Exception {
+        mvc.perform(post("/inscription").with(csrf())
+                .param("firstName", "A").param("lastName", "B")
+                .param("username", "pirate").param("password", "x").param("admin", "true"));
+        assertThat(donnees.tireurParUsername("pirate").isAdmin()).isFalse();
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void seulesLesCategoriesDArmeDuClubSontAcceptees() throws Exception {
+        mvc.perform(get("/armes/ajouter"))
+                .andExpect(content().string(containsString("Fas 57")))
+                .andExpect(content().string(containsString("Fusil de sport")));
+        mvc.perform(post("/armes/ajouter").with(csrf()).param("modele", "X").param("categorie", "Pistolet"))
+                .andExpect(status().isBadRequest());
+        assertThat(donnees.armes).isEmpty();
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void leNumeroDeLicenceFaitSixCaracteres() throws Exception {
+        mvc.perform(post("/licences/ajouter").with(csrf()).param("numero", "12345"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/licences/ajouter").with(csrf()).param("numero", "123456"))
+                .andExpect(redirectedUrl("/licences"));
+        assertThat(donnees.licences).singleElement().extracting(Licence::getNumero).isEqualTo("123456");
+    }
+
+    @Test
+    void lesCategoriesDeTirSontA300m() {
+        assertThat(donnees.categories).extracting(CategorieTir::getNom).containsExactlyElementsOf(Arme.CATEGORIES);
+        assertThat(donnees.categories).allMatch(c -> c.getDistance() == 300);
+    }
+
+    @Test
+    @WithUserDetails("admin")
+    void lAdminGereLeCalendrierEtLesAnnonces() throws Exception {
+        mvc.perform(post("/calendrier/ajouter").with(csrf())
+                .param("date", "2026-11-20").param("heure", "19:30").param("titre", "Assemblée générale"))
+                .andExpect(redirectedUrl("/calendrier"));
+        mvc.perform(post("/annonces/ajouter").with(csrf())
+                .param("titre", "Stand fermé").param("message", "Travaux").param("date", "2026-10-08"))
+                .andExpect(redirectedUrl("/annonces"));
+        mvc.perform(get("/calendrier")).andExpect(content().string(containsString("Assemblée générale")));
+        mvc.perform(get("/annonces")).andExpect(content().string(containsString("Stand fermé")));
+    }
+
     private static final String[] PAGES = {
             "/", "/profil", "/profil/modifier",
             "/armes", "/armes/ajouter", "/armes/600/modifier",
             "/licences", "/licences/ajouter", "/licences/601/modifier",
             "/seances", "/seances/ajouter", "/seances/602/modifier",
             "/resultats", "/resultats/ajouter", "/resultats/603/modifier",
-            "/saisons", "/categories", "/classement", "/comite",
+            "/saisons", "/categories", "/classement", "/annonces", "/calendrier",
     };
 
     private static final String[] PAGES_ADMIN = {
@@ -162,19 +248,21 @@ class AccesTests {
             "/saisons/ajouter", "/saisons/604/modifier",
             "/categories/ajouter", "/categories/605/modifier",
             "/classement/ajouter", "/classement/606/modifier",
-            "/comite/ajouter", "/comite/607/modifier",
+            "/annonces/ajouter", "/annonces/607/modifier",
+            "/calendrier/ajouter", "/calendrier/608/modifier",
     };
 
     // Des données appartenant à tireur1, pour que chaque page ait quelque chose à afficher.
     private void remplirUnPeu() {
         int t1 = idDe("tireur1");
-        donnees.armes.add(new Arme(600, "SIG 550", "Fusil", t1));
+        donnees.armes.add(new Arme(600, "SIG 550", "Fas 90", t1));
         donnees.licences.add(new Licence(601, "12345", "2027-12-31", t1));
         donnees.seances.add(new Seance(602, t1, 604, "2026-10-01", "Entraînement", "Villarepos"));
         donnees.resultats.add(new Resultat(603, 95, "2026-10-01", 602, 605));
         donnees.saisons.add(new Saison(604, "2026", "2026-01-01", "2026-12-31"));
         donnees.categories.add(new CategorieTir(605, "Fusil 300m", 300));
         donnees.classements.add(new Classement(606, 1, 95, 604, t1));
-        donnees.comite.add(new MembreComite(607, "Marie", "Martin", "Présidente", 1));
+        donnees.annonces.add(new Annonce(607, "Assemblée générale", "Le 20 novembre au stand.", "2026-10-01"));
+        donnees.calendrier.add(new Evenement(608, "2026-11-20", "19:30", "Assemblée générale", "Au stand"));
     }
 }
