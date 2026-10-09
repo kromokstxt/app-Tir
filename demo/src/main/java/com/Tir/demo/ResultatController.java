@@ -13,7 +13,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Comparator;
 import java.util.List;
 
-// Un résultat appartient au tireur de sa séance.
+// « Entrer un tir » et « Mes résultats ». Un tireur ne voit que ses tirs, l'admin voit tout.
+// La saison d'un tir est trouvée automatiquement d'après sa date.
 @Controller
 @RequestMapping("/resultats")
 public class ResultatController {
@@ -28,30 +29,39 @@ public class ResultatController {
 
     @GetMapping
     public String liste(Model model) {
-        model.addAttribute("resultats", donnees.resultats.stream()
-                .filter(r -> acces.peutVoir(donnees.proprietaireSeance(r.getSeanceId()))).toList());
+        // Les plus récents en premier.
+        List<Resultat> resultats = donnees.resultats.stream()
+                .filter(r -> acces.peutVoir(r.getTireurId()))
+                .sorted(Comparator.comparing(Resultat::getDate).reversed())
+                .toList();
+        model.addAttribute("resultats", resultats);
+        model.addAttribute("moyenne", resultats.stream().mapToDouble(Resultat::getNoteSur100).average().orElse(-1));
         return "resultats";
     }
 
     @GetMapping("/ajouter")
     public String ajouterForm(Model model) {
-        model.addAttribute("mesSeances", mesSeances());
+        model.addAttribute("categorieParDefaut", categorieParDefaut());
         return "resultat-form";
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam String date, @RequestParam int seanceId, @RequestParam int categorieId,
-                          @RequestParam(defaultValue = "false") boolean coupsProfonds, @RequestParam String coups) {
-        verifierSeanceEtCategorie(seanceId, categorieId);
-        donnees.resultats.add(new Resultat(donnees.nouvelId(), date, seanceId, categorieId, coupsProfonds, lireCoups(coups, coupsProfonds)));
-        return "redirect:/resultats";
+    public String ajouter(@RequestParam String date, @RequestParam int categorieId,
+                          @RequestParam(defaultValue = "false") boolean externe,
+                          @RequestParam(defaultValue = "false") boolean coupsProfonds,
+                          @RequestParam String coups, @RequestParam(required = false) Integer tireurId) {
+        ClubDonnees.trouver(donnees.categories, categorieId);
+        Resultat resultat = new Resultat(donnees.nouvelId(), acces.proprietaire(tireurId), donnees.saisonPour(date),
+                date, categorieId, externe, coupsProfonds, lireCoups(coups, coupsProfonds));
+        donnees.resultats.add(resultat);
+        return "redirect:/resultats/" + resultat.getId();
     }
 
-    // Voir la feuille de résultat sur la cible.
+    // Voir un tir sur la cible.
     @GetMapping("/{id}")
     public String voir(@PathVariable int id, Model model) {
         Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
-        acces.verifierProprietaire(donnees.proprietaireSeance(resultat.getSeanceId()));
+        acces.verifierProprietaire(resultat.getTireurId());
         model.addAttribute("resultat", resultat);
         return "resultat";
     }
@@ -59,39 +69,38 @@ public class ResultatController {
     @GetMapping("/{id}/modifier")
     public String modifierForm(@PathVariable int id, Model model) {
         Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
-        acces.verifierProprietaire(donnees.proprietaireSeance(resultat.getSeanceId()));
+        acces.verifierProprietaire(resultat.getTireurId());
         model.addAttribute("resultat", resultat);
-        model.addAttribute("mesSeances", mesSeances());
+        model.addAttribute("categorieParDefaut", resultat.getCategorieId());
         return "resultat-form";
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int seanceId,
-                           @RequestParam int categorieId, @RequestParam(defaultValue = "false") boolean coupsProfonds, @RequestParam String coups) {
-        Resultat ancien = ClubDonnees.trouver(donnees.resultats, id);
-        acces.verifierProprietaire(donnees.proprietaireSeance(ancien.getSeanceId()));
-        verifierSeanceEtCategorie(seanceId, categorieId);
-        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, date, seanceId, categorieId, coupsProfonds, lireCoups(coups, coupsProfonds)));
+    public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int categorieId,
+                           @RequestParam(defaultValue = "false") boolean externe,
+                           @RequestParam(defaultValue = "false") boolean coupsProfonds,
+                           @RequestParam String coups, @RequestParam(required = false) Integer tireurId) {
+        acces.verifierProprietaire(ClubDonnees.trouver(donnees.resultats, id).getTireurId());
+        ClubDonnees.trouver(donnees.categories, categorieId);
+        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, acces.proprietaire(tireurId), donnees.saisonPour(date),
+                date, categorieId, externe, coupsProfonds, lireCoups(coups, coupsProfonds)));
         return "redirect:/resultats/" + id;
     }
 
     @PostMapping("/{id}/supprimer")
     public String supprimer(@PathVariable int id) {
-        Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
-        acces.verifierProprietaire(donnees.proprietaireSeance(resultat.getSeanceId()));
+        acces.verifierProprietaire(ClubDonnees.trouver(donnees.resultats, id).getTireurId());
         ClubDonnees.supprimer(donnees.resultats, id);
         return "redirect:/resultats";
     }
 
-    private List<Seance> mesSeances() {
-        // Les plus récentes en premier : la séance du jour est choisie d'office.
-        return donnees.seances.stream().filter(s -> acces.peutVoir(s.getTireurId()))
-                .sorted(Comparator.comparing(Seance::getDate).reversed()).toList();
-    }
-
-    private void verifierSeanceEtCategorie(int seanceId, int categorieId) {
-        acces.verifierProprietaire(ClubDonnees.trouver(donnees.seances, seanceId).getTireurId());
-        ClubDonnees.trouver(donnees.categories, categorieId);
+    // L'arme proposée d'office : la catégorie de la première arme du tireur, sinon la première catégorie.
+    private int categorieParDefaut() {
+        int moi = acces.moi().getId();
+        return donnees.armes.stream().filter(a -> a.getTireurId() == moi).map(Arme::getCategorie)
+                .flatMap(nom -> donnees.categories.stream().filter(c -> c.getNom().equals(nom)))
+                .mapToInt(CategorieTir::getId).findFirst()
+                .orElse(donnees.categories.isEmpty() ? 0 : donnees.categories.get(0).getId());
     }
 
     private List<String> lireCoups(String texte, boolean coupsProfonds) {

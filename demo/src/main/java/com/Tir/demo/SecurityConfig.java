@@ -34,11 +34,11 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    // Les comptes sont les tireurs du club.
+    // Les comptes sont les tireurs du club ; on se connecte avec son prénom et son nom.
     @Bean
     public UserDetailsService userDetailsService(ClubDonnees donnees) {
         return username -> {
-            Shooter tireur = donnees.tireurParUsername(username);
+            Shooter tireur = donnees.tireurPourConnexion(username);
             if (tireur == null) {
                 throw new UsernameNotFoundException(username);
             }

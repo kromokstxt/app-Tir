@@ -12,16 +12,16 @@
 
     <h2>Catégories de tir :</h2>
 
-    <a th:if="${admin}" th:href="@{/categories/ajouter}">+ Ajouter une catégorie</a>
+    <a th:if="${admin}" th:href="@{/categories/ajouter}" class="bouton principal">+ Ajouter une catégorie</a>
 
     <ul>
         <li th:each="categorie : ${categories}">
             <span th:text="${categorie.nom}"></span>
             (<span th:text="${categorie.distance}"></span> m)
             <span th:if="${admin}">
-                <a th:href="@{/categories/{id}/modifier(id=${categorie.id})}">Modifier</a>
-                <form th:action="@{/categories/{id}/supprimer(id=${categorie.id})}" method="post" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                <a th:href="@{/categories/{id}/modifier(id=${categorie.id})}" class="bouton">✏️ Modifier</a>
+                <form th:action="@{/categories/{id}/supprimer(id=${categorie.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
+                    <button type="submit">🗑️ Supprimer</button>
                 </form>
             </span>
         </li>

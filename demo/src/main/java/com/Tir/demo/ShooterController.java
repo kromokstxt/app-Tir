@@ -39,15 +39,15 @@ public class ShooterController {
 
     @PostMapping("/tireurs/ajouter")
     public String addShooter(@RequestParam String firstName, @RequestParam String lastName,
-                             @RequestParam String username, @RequestParam String password,
+                             @RequestParam String password,
                              @RequestParam(defaultValue = "false") boolean admin, Model model) {
         acces.verifierAdmin();
-        if (donnees.tireurParUsername(username) != null) {
-            model.addAttribute("erreur", "Ce nom d'utilisateur est déjà pris.");
+        if (donnees.nomPris(firstName, lastName, -1)) {
+            model.addAttribute("erreur", "Un tireur porte déjà ce prénom et ce nom.");
             return "tireur-form";
         }
         donnees.tireurs.add(new Shooter(donnees.nouvelId(), firstName, lastName, club.getId(),
-                username, encoder.encode(password), admin));
+                donnees.nouvelIdentifiant(firstName, lastName), encoder.encode(password), admin));
         return "redirect:/tireurs";
     }
 
@@ -60,24 +60,22 @@ public class ShooterController {
 
     @PostMapping("/tireurs/{id}/modifier")
     public String editShooter(@PathVariable int id, @RequestParam String firstName, @RequestParam String lastName,
-                              @RequestParam String username, @RequestParam(defaultValue = "") String password,
+                              @RequestParam(defaultValue = "") String password,
                               @RequestParam(defaultValue = "false") boolean admin, Model model) {
         acces.verifierAdmin();
         Shooter ancien = ClubDonnees.trouver(donnees.tireurs, id);
-        // L'admin ne peut pas changer son propre identifiant ni se retirer les droits admin.
+        // L'admin ne peut pas se retirer lui-même les droits admin.
         if (id == acces.moi().getId()) {
-            username = ancien.getUsername();
             admin = true;
         }
-        Shooter autre = donnees.tireurParUsername(username);
-        if (autre != null && autre.getId() != id) {
+        if (donnees.nomPris(firstName, lastName, id)) {
             model.addAttribute("tireur", ancien);
-            model.addAttribute("erreur", "Ce nom d'utilisateur est déjà pris.");
+            model.addAttribute("erreur", "Un tireur porte déjà ce prénom et ce nom.");
             return "tireur-form";
         }
         String motDePasse = password.isBlank() ? ancien.getPassword() : encoder.encode(password);
         ClubDonnees.remplacer(donnees.tireurs, new Shooter(id, firstName, lastName, ancien.getClubId(),
-                username, motDePasse, admin));
+                ancien.getUsername(), motDePasse, admin));
         return "redirect:/tireurs";
     }
 

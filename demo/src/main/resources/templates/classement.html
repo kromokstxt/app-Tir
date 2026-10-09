@@ -12,7 +12,7 @@
 
     <h2>Classement :</h2>
 
-    <a th:if="${admin}" th:href="@{/classement/ajouter}">+ Ajouter une ligne au classement</a>
+    <a th:if="${admin}" th:href="@{/classement/ajouter}" class="bouton principal">+ Ajouter une ligne au classement</a>
 
     <ul>
         <li th:each="ligne : ${classements}">
@@ -21,9 +21,9 @@
             <span th:text="${@clubDonnees.nomTireur(ligne.tireurId)}"></span>
             — <span th:text="${ligne.points}"></span> points
             <span th:if="${admin}">
-                <a th:href="@{/classement/{id}/modifier(id=${ligne.id})}">Modifier</a>
-                <form th:action="@{/classement/{id}/supprimer(id=${ligne.id})}" method="post" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                <a th:href="@{/classement/{id}/modifier(id=${ligne.id})}" class="bouton">✏️ Modifier</a>
+                <form th:action="@{/classement/{id}/supprimer(id=${ligne.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
+                    <button type="submit">🗑️ Supprimer</button>
                 </form>
             </span>
         </li>

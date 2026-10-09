@@ -12,17 +12,20 @@
 
     <h2>Connexion</h2>
 
-    <p th:if="${param.error}">Nom d'utilisateur ou mot de passe incorrect.</p>
+    <p class="erreur" th:if="${param.error}">Nom ou mot de passe incorrect.</p>
     <p th:if="${param.deconnecte}">Vous êtes déconnecté.</p>
-    <p th:if="${param.inscrit}">Votre compte est créé, vous pouvez vous connecter.</p>
+    <p class="info" th:if="${param.inscrit}">Votre compte est créé : connectez-vous avec votre prénom, votre nom et votre mot de passe.</p>
 
     <form th:action="@{/login}" method="post">
-        <label>Nom d'utilisateur : <input type="text" name="username" required autofocus></label><br>
-        <label>Mot de passe : <input type="password" name="password" required></label><br>
+        <label>Votre prénom et nom :
+            <input type="text" name="username" placeholder="Jean Dupont" autocomplete="username" required autofocus>
+        </label>
+        <label>Mot de passe : <input type="password" name="password" autocomplete="current-password" required></label>
         <button type="submit">Se connecter</button>
     </form>
 
-    <p>Pas encore de compte ? <a th:href="@{/inscription}">Créer un compte</a></p>
+    <h2>Pas encore de compte ?</h2>
+    <a th:href="@{/inscription}" class="bouton">✍️ Créer un compte</a>
 
 </body>
 </html>
