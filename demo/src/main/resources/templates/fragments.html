@@ -4,15 +4,18 @@
 
     <!-- En-tête de chaque page : retour à l'accueil, qui est connecté, se déconnecter -->
     <header th:fragment="entete" class="entete">
-        <a th:href="@{/}" class="bouton">🏠 Accueil</a>
+        <a th:href="@{/}" class="bouton"><svg th:replace="~{fragments :: icone('accueil')}"></svg> Accueil</a>
         <span class="qui">
-            👤 <span th:text="${moi.firstName + ' ' + moi.lastName}"></span>
+            <svg th:replace="~{fragments :: icone('profil')}"></svg> <span th:text="${moi.firstName + ' ' + moi.lastName}"></span>
             <span th:if="${admin}">(admin)</span>
         </span>
         <form th:action="@{/logout}" method="post">
             <button type="submit">Se déconnecter</button>
         </form>
     </header>
+
+    <!-- Une icône au trait (voir static/icones.svg) -->
+    <svg th:fragment="icone(nom)" class="icone" aria-hidden="true"><use th:href="@{/icones.svg} + '#' + ${nom}"></use></svg>
 
     <!-- Liste des tireurs, affichée seulement pour l'admin, qui choisit à qui appartient l'élément -->
     <label th:fragment="choixTireur(selection)" th:if="${admin}">Tireur :

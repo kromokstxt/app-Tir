@@ -34,10 +34,10 @@ public class LicenceController {
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam String numero, @RequestParam(defaultValue = "") String dateValidite,
+    public String ajouter(@RequestParam String numero,
                           @RequestParam(required = false) Integer tireurId) {
         verifierNumero(numero);
-        donnees.licences.add(new Licence(donnees.nouvelId(), numero, dateValidite, acces.proprietaire(tireurId)));
+        donnees.licences.add(new Licence(donnees.nouvelId(), numero, acces.proprietaire(tireurId)));
         return "redirect:/licences";
     }
 
@@ -50,11 +50,11 @@ public class LicenceController {
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam String numero, @RequestParam(defaultValue = "") String dateValidite,
+    public String modifier(@PathVariable int id, @RequestParam String numero,
                            @RequestParam(required = false) Integer tireurId) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.licences, id).getTireurId());
         verifierNumero(numero);
-        ClubDonnees.remplacer(donnees.licences, new Licence(id, numero, dateValidite, acces.proprietaire(tireurId)));
+        ClubDonnees.remplacer(donnees.licences, new Licence(id, numero, acces.proprietaire(tireurId)));
         return "redirect:/licences";
     }
 

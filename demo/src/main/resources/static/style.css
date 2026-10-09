@@ -176,8 +176,6 @@ h2.section { font-size: 1.05em; color: #555; margin-top: 1.4em; }
 .liste-coups { columns: 3; padding-left: 1.6em; }
 .liste-coups li { margin: 2px 0; }
 
-label.option { display: flex; align-items: center; gap: 12px; }
-label.option input { width: 28px; height: 28px; flex: none; }
 
 .erreur { background: #fde8e8; border: 2px solid var(--rouge); color: var(--rouge); padding: 12px; border-radius: 10px; }
 .info { background: #e8f0fd; border-radius: 10px; padding: 10px 12px; }
@@ -189,3 +187,17 @@ label.option input { width: 28px; height: 28px; flex: none; }
 .cible-grande { width: 100%; max-width: 600px; aspect-ratio: 1; border: 1px solid #ccc; touch-action: none; cursor: grab; }
 li::after { content: ""; display: block; clear: both; }
 .details { overflow: hidden; margin-bottom: 8px; }
+
+/* Icônes au trait (static/icones.svg), dans la couleur du texte. */
+.icone {
+    width: 1.2em; height: 1.2em; vertical-align: -0.22em;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.tuile .icone { width: 46px; height: 46px; stroke-width: 1.8; }
+.tuile.large .icone { width: 56px; height: 56px; }
+
+/* Boutons marche / arrêt (Tir externe, Coups profonds, Flèches). */
+.interrupteurs { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.interrupteur { background: #fff; border-color: #8a93a3; }
+.interrupteur[aria-pressed=true] { background: var(--bleu); border-color: var(--bleu); color: #fff; }
+.aide { background: #e8f0fd; border-radius: 10px; padding: 8px 12px; font-size: 0.9em; }

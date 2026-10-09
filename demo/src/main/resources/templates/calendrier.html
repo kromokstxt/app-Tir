@@ -23,9 +23,9 @@
             : <span th:text="${evenement.titre}"></span>
             <span th:unless="${#strings.isEmpty(evenement.description)}" th:text="'— ' + ${evenement.description}"></span>
             <span th:if="${admin}">
-                <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}" class="bouton">✏️ Modifier</a>
+                <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
                 <form th:action="@{/calendrier/{id}/supprimer(id=${evenement.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
-                    <button type="submit">🗑️ Supprimer</button>
+                    <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
                 </form>
             </span>
         </li>

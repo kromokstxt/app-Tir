@@ -21,15 +21,15 @@
                 <option th:each="s : ${@clubDonnees.saisons}" th:value="${s.id}" th:text="${s.annee}"
                         th:selected="${classement != null and s.id == classement.saisonId}"></option>
             </select>
-        </label><br>
+        </label>
         <label>Tireur :
             <select name="tireurId">
                 <option th:each="t : ${@clubDonnees.tireurs}" th:value="${t.id}" th:text="${t.firstName + ' ' + t.lastName}"
                         th:selected="${classement != null and t.id == classement.tireurId}"></option>
             </select>
-        </label><br>
-        <label>Position : <input type="number" name="position" min="1" th:value="${classement?.position}" required></label><br>
-        <label>Points : <input type="number" name="points" th:value="${classement?.points}" required></label><br>
+        </label>
+        <label>Position : <input type="number" name="position" min="1" th:value="${classement?.position}" required></label>
+        <label>Points : <input type="number" name="points" th:value="${classement?.points}" required></label>
         <button type="submit">Enregistrer</button>
     </form>
 

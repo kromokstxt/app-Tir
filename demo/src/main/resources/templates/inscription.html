@@ -16,13 +16,12 @@
     <p class="info">Pour vous connecter ensuite : votre prénom, votre nom et votre mot de passe.</p>
 
     <form th:action="@{/inscription}" method="post">
-        <label>Prénom : <input type="text" name="firstName" th:value="${firstName}" required></label><br>
-        <label>Nom : <input type="text" name="lastName" th:value="${lastName}" required></label><br>
-        <label>Mot de passe : <input type="password" name="password" required></label><br>
-        <label>Numéro de licence (6 caractères, facultatif) :
+        <label>Prénom : <input type="text" name="firstName" th:value="${firstName}" required></label>
+        <label>Nom : <input type="text" name="lastName" th:value="${lastName}" required></label>
+        <label>Mot de passe : <input type="password" name="password" required></label>
+        <label>Numéro de licence (6 caractères, facultatif) — votre numéro utilisé pour le politronique au stand :
             <input type="text" name="licence" th:value="${licence}" minlength="6" maxlength="6">
-        </label><br>
-        <small>votre numéro utilisé pour le politronique au stand</small><br>
+        </label>
 
         <h3>Mes armes (facultatif, jusqu'à 4)</h3>
         <!-- 4 lignes : la première est visible, le bouton fait apparaître les suivantes. -->

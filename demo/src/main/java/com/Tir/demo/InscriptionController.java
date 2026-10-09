@@ -72,7 +72,7 @@ public class InscriptionController {
                 donnees.nouvelIdentifiant(firstName, lastName), encoder.encode(password), false);
         donnees.tireurs.add(tireur);
         if (!licence.isBlank()) {
-            donnees.licences.add(new Licence(donnees.nouvelId(), licence, "", tireur.getId()));
+            donnees.licences.add(new Licence(donnees.nouvelId(), licence, tireur.getId()));
         }
         for (int i : armes) {
             donnees.armes.add(new Arme(donnees.nouvelId(), categories.get(i), version(versions, i), tireur.getId()));

@@ -21,9 +21,9 @@
         <p><em th:text="${annonce.date}"></em></p>
         <p th:text="${annonce.message}" style="white-space: pre-line"></p>
         <div th:if="${admin}">
-            <a th:href="@{/annonces/{id}/modifier(id=${annonce.id})}" class="bouton">✏️ Modifier</a>
+            <a th:href="@{/annonces/{id}/modifier(id=${annonce.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
             <form th:action="@{/annonces/{id}/supprimer(id=${annonce.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
-                <button type="submit">🗑️ Supprimer</button>
+                <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
             </form>
         </div>
         <hr>

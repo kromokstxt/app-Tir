@@ -21,9 +21,9 @@
             <span th:text="${@clubDonnees.nomTireur(ligne.tireurId)}"></span>
             — <span th:text="${ligne.points}"></span> points
             <span th:if="${admin}">
-                <a th:href="@{/classement/{id}/modifier(id=${ligne.id})}" class="bouton">✏️ Modifier</a>
+                <a th:href="@{/classement/{id}/modifier(id=${ligne.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
                 <form th:action="@{/classement/{id}/supprimer(id=${ligne.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
-                    <button type="submit">🗑️ Supprimer</button>
+                    <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
                 </form>
             </span>
         </li>

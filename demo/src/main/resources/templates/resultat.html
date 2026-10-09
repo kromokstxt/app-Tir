@@ -11,7 +11,7 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2>🎯 Mon tir</h2>
+    <h2><svg th:replace="~{fragments :: icone('cible')}"></svg> Mon tir</h2>
 
     <div class="moyenne">
         Note
@@ -24,7 +24,7 @@
         <span th:text="${resultat.date}"></span> —
         <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
         <span class="badge" th:if="${resultat.externe}">Tir externe</span>
-        <th:block th:if="${admin}"><br>👤 <span th:text="${@clubDonnees.nomTireur(resultat.tireurId)}"></span></th:block>
+        <th:block th:if="${admin}"><br><svg th:replace="~{fragments :: icone('profil')}"></svg> <span th:text="${@clubDonnees.nomTireur(resultat.tireurId)}"></span></th:block>
     </p>
 
     <p>
@@ -43,9 +43,9 @@
     </ol>
     <p><small>Chaque coup est placé dans l'anneau de ses points, dans la direction de sa flèche ; avec les coups profonds, le coup profond donne la distance exacte au centre (100 = plein centre). Le numéro sur la cible est le numéro du coup.</small></p>
 
-    <a th:href="@{/resultats/ajouter}" class="bouton principal">🎯 Entrer un autre tir</a>
-    <a th:href="@{/resultats}" class="bouton">📊 Mes résultats</a>
-    <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}" class="bouton">✏️ Modifier</a>
+    <a th:href="@{/resultats/ajouter}" class="bouton principal"><svg th:replace="~{fragments :: icone('cible')}"></svg> Entrer un autre tir</a>
+    <a th:href="@{/resultats}" class="bouton"><svg th:replace="~{fragments :: icone('resultats')}"></svg> Mes résultats</a>
+    <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
 
 
 </body>

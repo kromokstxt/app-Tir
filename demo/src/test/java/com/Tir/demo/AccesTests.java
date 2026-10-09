@@ -465,13 +465,18 @@ class AccesTests {
                 .andExpect(content().string(containsString("id=\"apercu\"")))
                 .andExpect(content().string(containsString("manque()")))
                 .andExpect(content().string(containsString("choisirDirection('HD')")))
-                .andExpect(content().string(containsString("Coups profonds (sur 100, 100 = plein centre)")));
+                .andExpect(content().string(containsString("id=\"bouton-externe\"")))
+                .andExpect(content().string(containsString("id=\"bouton-profond\"")))
+                .andExpect(content().string(containsString("id=\"bouton-fleches\"")))
+                // Les flèches sont cachées tant qu'on n'a pas touché le bouton.
+                .andExpect(content().string(containsString("<div id=\"zone-fleches\" hidden>")));
         mvc.perform(get("/cible.js")).andExpect(status().isOk());
     }
 
     @Test
     void lesFichiersDeMiseEnPageSontPublics() throws Exception {
         mvc.perform(get("/style.css")).andExpect(status().isOk());
+        mvc.perform(get("/icones.svg")).andExpect(status().isOk());
         mvc.perform(get("/login")).andExpect(content().string(containsString("width=device-width")));
         // Chaque version a sa propre adresse : un téléphone ne garde pas une vieille copie.
         mvc.perform(get("/login")).andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*/style-[0-9a-f]{32}\\.css.*")));
@@ -498,7 +503,7 @@ class AccesTests {
     private void remplirUnPeu() {
         int t1 = idDe("tireur1");
         donnees.armes.add(new Arme(600, "Fas 90", "", t1));
-        donnees.licences.add(new Licence(601, "12345", "2027-12-31", t1));
+        donnees.licences.add(new Licence(601, "123456", t1));
         donnees.resultats.add(new Resultat(603, t1, 604, "2026-10-01", 605, false, false, List.of("10>H", "9>BG", "M", "0")));
         donnees.saisons.add(new Saison(604, "2026", "2026-01-01", "2026-12-31"));
         donnees.categories.add(new CategorieTir(605, "Fusil 300m", 300));

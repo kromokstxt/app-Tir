@@ -17,11 +17,10 @@
     <ul>
         <li th:each="licence : ${licences}">
             N° <span th:text="${licence.numero}"></span>
-            <span th:unless="${#strings.isEmpty(licence.dateValidite)}">, valable jusqu'au <span th:text="${licence.dateValidite}"></span></span>
             <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(licence.tireurId)}"></span>
-            <a th:href="@{/licences/{id}/modifier(id=${licence.id})}" class="bouton">✏️ Modifier</a>
+            <a th:href="@{/licences/{id}/modifier(id=${licence.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
             <form th:action="@{/licences/{id}/supprimer(id=${licence.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
-                <button type="submit">🗑️ Supprimer</button>
+                <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
             </form>
         </li>
     </ul>
