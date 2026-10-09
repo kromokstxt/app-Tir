@@ -2,19 +2,17 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-    <!-- En-tête de chaque page : le club, qui est connecté, se déconnecter -->
-    <div th:fragment="entete">
-        <h1 th:text="${club.nom}">Stand de tir</h1>
-        <p>
-            Connecté : <span th:text="${moi.firstName + ' ' + moi.lastName}"></span>
+    <!-- En-tête de chaque page : retour à l'accueil, qui est connecté, se déconnecter -->
+    <header th:fragment="entete" class="entete">
+        <a th:href="@{/}" class="bouton">🏠 Accueil</a>
+        <span class="qui">
+            👤 <span th:text="${moi.firstName + ' ' + moi.lastName}"></span>
             <span th:if="${admin}">(admin)</span>
-        </p>
+        </span>
         <form th:action="@{/logout}" method="post">
             <button type="submit">Se déconnecter</button>
         </form>
-        <a th:href="@{/}">← Accueil</a>
-        <hr>
-    </div>
+    </header>
 
     <!-- Liste des tireurs, affichée seulement pour l'admin, qui choisit à qui appartient l'élément -->
     <label th:fragment="choixTireur(selection)" th:if="${admin}">Tireur :

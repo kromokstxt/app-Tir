@@ -12,7 +12,7 @@
 
     <h2>Saisons :</h2>
 
-    <a th:if="${admin}" th:href="@{/saisons/ajouter}">+ Ajouter une saison</a>
+    <a th:if="${admin}" th:href="@{/saisons/ajouter}" class="bouton principal">+ Ajouter une saison</a>
 
     <ul>
         <li th:each="saison : ${saisons}">
@@ -20,9 +20,9 @@
             du <span th:text="${saison.dateDebut}"></span>
             au <span th:text="${saison.dateFin}"></span>
             <span th:if="${admin}">
-                <a th:href="@{/saisons/{id}/modifier(id=${saison.id})}">Modifier</a>
-                <form th:action="@{/saisons/{id}/supprimer(id=${saison.id})}" method="post" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                <a th:href="@{/saisons/{id}/modifier(id=${saison.id})}" class="bouton">✏️ Modifier</a>
+                <form th:action="@{/saisons/{id}/supprimer(id=${saison.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
+                    <button type="submit">🗑️ Supprimer</button>
                 </form>
             </span>
         </li>

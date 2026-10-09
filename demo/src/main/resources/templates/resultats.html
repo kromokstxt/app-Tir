@@ -11,25 +11,35 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2 th:text="${admin} ? 'Résultats :' : 'Mes résultats :'">Résultats :</h2>
+    <h2 th:text="${admin} ? '📊 Résultats' : '📊 Mes résultats'">Mes résultats</h2>
 
-    <p>Un résultat se rattache à une séance et à une catégorie de tir.</p>
-    <a th:href="@{/resultats/ajouter}">+ Ajouter un résultat</a>
+    <a th:href="@{/resultats/ajouter}" class="bouton principal">🎯 Entrer un tir</a>
+
+    <div class="moyenne" th:if="${moyenne >= 0}">
+        <span th:text="${admin} ? 'Moyenne de tous les tirs' : 'Ma moyenne'">Ma moyenne</span>
+        <strong th:text="${#numbers.formatDecimal(moyenne, 1, 1)} + ' / 100'"></strong>
+        <span th:text="'sur ' + ${#lists.size(resultats)} + (${#lists.size(resultats)} > 1 ? ' tirs' : ' tir')"></span>
+    </div>
+    <p class="info" th:if="${#lists.isEmpty(resultats)}">Pas encore de tir. Touchez « Entrer un tir » pour commencer.</p>
 
     <ul>
         <li th:each="resultat : ${resultats}">
             <a th:href="@{/resultats/{id}(id=${resultat.id})}" class="cible cible-mini" data-cible
                th:attr="data-coups=${resultat.coupsTexte}"></a>
-            <strong th:text="${resultat.score} + ' / ' + ${resultat.scoreMax}"></strong>
-            <span th:if="${resultat.coupsProfonds}" th:text="'(' + ${resultat.scoreProfond} + ' en coups profonds)'"></span>
-            (<span th:text="${#lists.size(resultat.coups)}"></span> coups) le
-            <span th:text="${resultat.date}"></span>
-            en <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
-            — séance <span th:text="${@clubDonnees.nomSeance(resultat.seanceId)}"></span>
-            <a th:href="@{/resultats/{id}(id=${resultat.id})}">Voir la cible</a>
-            <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}">Modifier</a>
-            <form th:action="@{/resultats/{id}/supprimer(id=${resultat.id})}" method="post" style="display:inline">
-                <button type="submit">Supprimer</button>
+            <div class="details">
+            <span class="note" th:text="${#numbers.formatDecimal(resultat.noteSur100, 1, 1)} + ' / 100'"></span><br>
+            <span th:text="${resultat.date}"></span> —
+            <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
+            <span class="badge" th:if="${resultat.externe}">Tir externe</span><br>
+            <span th:text="${resultat.score} + ' points sur ' + ${resultat.scoreMax}"></span>
+            (<span th:text="${#lists.size(resultat.coups)}"></span> coups)
+            <th:block th:if="${admin}"><br>👤 <span th:text="${@clubDonnees.nomTireur(resultat.tireurId)}"></span></th:block>
+            </div>
+            <a th:href="@{/resultats/{id}(id=${resultat.id})}" class="bouton">🎯 Voir la cible</a>
+            <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}" class="bouton">✏️ Modifier</a>
+            <form th:action="@{/resultats/{id}/supprimer(id=${resultat.id})}" method="post"
+                  onsubmit="return confirm('Supprimer ce tir ?')">
+                <button type="submit">🗑️ Supprimer</button>
             </form>
         </li>
     </ul>

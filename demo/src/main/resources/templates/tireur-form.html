@@ -12,19 +12,18 @@
 
     <h2 th:text="${tireur == null} ? 'Ajouter un tireur' : 'Modifier un tireur'">Tireur</h2>
 
-    <p th:if="${erreur}" th:text="${erreur}"></p>
+    <p class="erreur" th:if="${erreur}" th:text="${erreur}"></p>
 
     <form th:action="${tireur == null} ? @{/tireurs/ajouter} : @{/tireurs/{id}/modifier(id=${tireur.id})}" method="post">
         <label>Prénom : <input type="text" name="firstName" th:value="${tireur?.firstName}" required></label><br>
         <label>Nom : <input type="text" name="lastName" th:value="${tireur?.lastName}" required></label><br>
-        <label>Nom d'utilisateur : <input type="text" name="username" th:value="${tireur?.username}" required></label><br>
         <label th:if="${tireur == null}">Mot de passe : <input type="password" name="password" required><br></label>
         <label th:if="${tireur != null}">Nouveau mot de passe (vide = inchangé) : <input type="password" name="password"><br></label>
         <label>Admin : <input type="checkbox" name="admin" value="true" th:checked="${tireur?.admin}"></label><br>
         <button type="submit">Enregistrer</button>
     </form>
 
-    <a th:href="@{/tireurs}">← Tireurs</a>
+    <a th:href="@{/tireurs}" class="bouton">← Tireurs</a>
 
 </body>
 </html>

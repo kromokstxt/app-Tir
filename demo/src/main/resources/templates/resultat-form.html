@@ -4,41 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" th:href="@{/style.css}">
-    <title>Résultat</title>
+    <title>Entrer un tir</title>
     <script th:src="@{/cible.js}"></script>
 </head>
 <body>
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2 th:text="${resultat == null} ? 'Ajouter un résultat' : 'Modifier un résultat'">Résultat</h2>
+    <h2 th:text="${resultat == null} ? '🎯 Entrer un tir' : '🎯 Modifier un tir'">Entrer un tir</h2>
 
     <p id="erreur-js" class="erreur" hidden>
         Un problème empêche la saisie des coups. Rechargez la page
         (sur téléphone : tirez la page vers le bas ; sur ordinateur : Ctrl + F5).
     </p>
 
-    <p th:if="${#lists.isEmpty(mesSeances)}">
-        Il faut d'abord une séance : <a th:href="@{/seances/ajouter}">ajouter une séance</a>.
-    </p>
-
-    <form th:unless="${#lists.isEmpty(mesSeances)}"
-          th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post"
+    <form th:action="${resultat == null} ? @{/resultats/ajouter} : @{/resultats/{id}/modifier(id=${resultat.id})}" method="post"
           onsubmit="terminerAvantEnvoi()">
-        <label>Séance :
-            <select name="seanceId">
-                <option th:each="s, etat : ${mesSeances}" th:value="${s.id}" th:text="${@clubDonnees.nomSeance(s.id)}"
-                        th:selected="${resultat == null ? etat.first : s.id == resultat.seanceId}"></option>
-            </select>
-        </label>
-        <label>Catégorie :
+        <label th:replace="~{fragments :: choixTireur(${resultat?.tireurId})}"></label>
+        <label>Date : <input type="date" name="date" th:value="${resultat?.date ?: aujourdhui}" required></label>
+        <label>Arme :
             <select name="categorieId">
                 <option th:each="c : ${@clubDonnees.categories}" th:value="${c.id}" th:text="${c.nom}"
-                        th:selected="${resultat != null and c.id == resultat.categorieId}"></option>
+                        th:selected="${c.id == categorieParDefaut}"></option>
             </select>
         </label>
-        <label>Date : <input type="date" name="date" th:value="${resultat?.date ?: aujourdhui}" required></label>
 
+        <label class="option">
+            <input type="checkbox" name="externe" value="true" th:checked="${resultat != null and resultat.externe}">
+            Tir externe (pas au stand du club)
+        </label>
         <label class="option">
             <input type="checkbox" name="coupsProfonds" value="true" id="avec-profond" onchange="changerType()"
                    th:checked="${resultat != null and resultat.coupsProfonds}">
@@ -112,7 +106,7 @@
         <button type="submit">Enregistrer</button>
     </form>
 
-    <a th:href="@{/resultats}">← Résultats</a>
+    <a th:href="@{/resultats}" class="bouton">← Résultats</a>
 
     <script>
         // Saisie d'un coup :

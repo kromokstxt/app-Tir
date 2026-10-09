@@ -12,15 +12,15 @@
 
     <h2 th:text="${admin} ? 'Armes :' : 'Mes armes :'">Armes :</h2>
 
-    <a th:href="@{/armes/ajouter}">+ Ajouter une arme</a>
+    <a th:href="@{/armes/ajouter}" class="bouton principal">+ Ajouter une arme</a>
 
     <ul>
         <li th:each="arme : ${armes}">
             <strong th:text="${arme.nom}"></strong>
             <span th:if="${admin}" th:text="'— ' + ${@clubDonnees.nomTireur(arme.tireurId)}"></span>
-            <a th:href="@{/armes/{id}/modifier(id=${arme.id})}">Modifier</a>
-            <form th:action="@{/armes/{id}/supprimer(id=${arme.id})}" method="post" style="display:inline">
-                <button type="submit">Supprimer</button>
+            <a th:href="@{/armes/{id}/modifier(id=${arme.id})}" class="bouton">✏️ Modifier</a>
+            <form th:action="@{/armes/{id}/supprimer(id=${arme.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
+                <button type="submit">🗑️ Supprimer</button>
             </form>
         </li>
     </ul>

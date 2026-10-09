@@ -12,17 +12,16 @@
 
     <h2>Tireurs :</h2>
 
-    <a th:href="@{/tireurs/ajouter}">+ Ajouter un tireur</a>
+    <a th:href="@{/tireurs/ajouter}" class="bouton principal">+ Ajouter un tireur</a>
 
     <ul>
         <li th:each="tireur : ${shooters}">
             <span th:text="${tireur.firstName}"></span>
             <span th:text="${tireur.lastName}"></span>
-            (<span th:text="${tireur.username}"></span>)
             <span th:if="${tireur.admin}">— admin</span>
-            <a th:href="@{/tireurs/{id}/modifier(id=${tireur.id})}">Modifier</a>
+            <a th:href="@{/tireurs/{id}/modifier(id=${tireur.id})}" class="bouton">✏️ Modifier</a>
             <form th:if="${tireur.id != moi.id}" th:action="@{/tireurs/{id}/supprimer(id=${tireur.id})}" method="post" style="display:inline">
-                <button type="submit">Supprimer</button>
+                <button type="submit">🗑️ Supprimer</button>
             </form>
         </li>
     </ul>

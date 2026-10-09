@@ -34,7 +34,7 @@ public class InscriptionController {
 
     @PostMapping("/inscription")
     public String inscription(@RequestParam String firstName, @RequestParam String lastName,
-                              @RequestParam String username, @RequestParam String password,
+                              @RequestParam String password,
                               @RequestParam(defaultValue = "") String licence,
                               @RequestParam(name = "categorie", required = false) List<String> categoriesSaisies,
                               @RequestParam(name = "version", required = false) List<String> versionsSaisies,
@@ -50,8 +50,8 @@ public class InscriptionController {
         }
 
         String erreur = null;
-        if (donnees.tireurParUsername(username) != null) {
-            erreur = "Ce nom d'utilisateur est déjà pris.";
+        if (donnees.nomPris(firstName, lastName, -1)) {
+            erreur = "Un tireur porte déjà ce prénom et ce nom. Ajoutez par exemple l'initiale d'un deuxième prénom.";
         } else if (!licence.isBlank() && !Licence.numeroValide(licence)) {
             erreur = "Le numéro de licence doit faire 6 caractères.";
         } else if (armes.size() > ARMES_MAX) {
@@ -63,14 +63,13 @@ public class InscriptionController {
             model.addAttribute("erreur", erreur);
             model.addAttribute("firstName", firstName);
             model.addAttribute("lastName", lastName);
-            model.addAttribute("username", username);
             model.addAttribute("licence", licence);
             preparerArmes(model, categories, versions);
             return "inscription";
         }
 
         Shooter tireur = new Shooter(donnees.nouvelId(), firstName, lastName, club.getId(),
-                username, encoder.encode(password), false);
+                donnees.nouvelIdentifiant(firstName, lastName), encoder.encode(password), false);
         donnees.tireurs.add(tireur);
         if (!licence.isBlank()) {
             donnees.licences.add(new Licence(donnees.nouvelId(), licence, "", tireur.getId()));

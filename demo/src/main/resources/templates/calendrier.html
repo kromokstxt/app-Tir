@@ -12,7 +12,7 @@
 
     <h2>Calendrier :</h2>
 
-    <a th:if="${admin}" th:href="@{/calendrier/ajouter}">+ Ajouter une date</a>
+    <a th:if="${admin}" th:href="@{/calendrier/ajouter}" class="bouton principal">+ Ajouter une date</a>
 
     <p th:if="${#lists.isEmpty(evenements)}">Rien de prévu pour le moment.</p>
 
@@ -23,9 +23,9 @@
             : <span th:text="${evenement.titre}"></span>
             <span th:unless="${#strings.isEmpty(evenement.description)}" th:text="'— ' + ${evenement.description}"></span>
             <span th:if="${admin}">
-                <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}">Modifier</a>
-                <form th:action="@{/calendrier/{id}/supprimer(id=${evenement.id})}" method="post" style="display:inline">
-                    <button type="submit">Supprimer</button>
+                <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}" class="bouton">✏️ Modifier</a>
+                <form th:action="@{/calendrier/{id}/supprimer(id=${evenement.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
+                    <button type="submit">🗑️ Supprimer</button>
                 </form>
             </span>
         </li>

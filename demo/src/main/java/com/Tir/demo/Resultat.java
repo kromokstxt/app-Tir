@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// Une feuille de résultat. Chaque coup a ses points (0 à 10, ou M = manqué) et la
+// Un tir : qui a tiré, quand, avec quelle arme, au stand ou en tir externe,
+// et la feuille de résultat. Chaque coup a ses points (0 à 10, ou M = manqué) et la
 // direction de sa flèche (H = haut, BD = bas-droite, …), facultative.
 // Avec l'option « coups profonds », on donne le coup profond de chaque coup
 // (0 à 100, 100 = plein centre) et ses points en sont déduits.
@@ -23,19 +24,24 @@ public class Resultat implements Identifiable {
     private static final Pattern COUP = Pattern.compile("(\\d{1,2})?(?::(\\d{1,3}))?(?:>([A-Z]{1,2}))?");
 
     private int id;
+    private int tireurId;
+    private int saisonId;
     private String date;
-    private int seanceId;
     private int categorieId;
+    private boolean externe;
     private boolean coupsProfonds;
     private List<String> coups;
     private int score;
     private int scoreProfond;
 
-    public Resultat(int id, String date, int seanceId, int categorieId, boolean coupsProfonds, List<String> coups) {
+    public Resultat(int id, int tireurId, int saisonId, String date, int categorieId,
+                    boolean externe, boolean coupsProfonds, List<String> coups) {
         this.id = id;
+        this.tireurId = tireurId;
+        this.saisonId = saisonId;
         this.date = date;
-        this.seanceId = seanceId;
         this.categorieId = categorieId;
+        this.externe = externe;
         this.coupsProfonds = coupsProfonds;
         this.coups = List.copyOf(coups);
         for (String coup : coups) {
@@ -98,9 +104,11 @@ public class Resultat implements Identifiable {
     }
 
     public int getId() { return id; }
+    public int getTireurId() { return tireurId; }
+    public int getSaisonId() { return saisonId; }
     public String getDate() { return date; }
-    public int getSeanceId() { return seanceId; }
     public int getCategorieId() { return categorieId; }
+    public boolean isExterne() { return externe; }
     public boolean isCoupsProfonds() { return coupsProfonds; }
     public List<String> getCoups() { return coups; }
     public int getScore() { return score; }
@@ -108,6 +116,12 @@ public class Resultat implements Identifiable {
     public int getScoreProfond() { return scoreProfond; }
     public int getScoreProfondMax() { return 100 * coups.size(); }
     public String getCoupsTexte() { return String.join(" ", coups); }
+
+    // La note du tir sur 100 : la moyenne des coups profonds, ou la moyenne des points × 10.
+    // Un coup manqué compte 0.
+    public double getNoteSur100() {
+        return coupsProfonds ? (double) scoreProfond / coups.size() : 10.0 * score / coups.size();
+    }
 
     // Pour la feuille de résultat : « 9 ↗ (87) », « Manqué ».
     public List<String> getCoupsAffiches() {
