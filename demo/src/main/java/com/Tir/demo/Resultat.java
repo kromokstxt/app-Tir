@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-// Un tir : qui a tiré, quand, avec quelle arme, au stand ou en tir externe,
+// Un tir : qui a tiré, quand, avec laquelle de ses armes (son nom, ex. « Fas 57/03 »), au stand ou en tir externe,
 // et la feuille de résultat. Chaque coup a ses points (0 à 10, ou M = manqué) et la
 // direction de sa flèche (H = haut, BD = bas-droite, …), facultative.
 // Avec l'option « coups profonds », on donne le coup profond de chaque coup
@@ -27,20 +27,20 @@ public class Resultat implements Identifiable {
     private int tireurId;
     private int saisonId;
     private String date;
-    private int categorieId;
+    private String arme;
     private boolean externe;
     private boolean coupsProfonds;
     private List<String> coups;
     private int score;
     private int scoreProfond;
 
-    public Resultat(int id, int tireurId, int saisonId, String date, int categorieId,
+    public Resultat(int id, int tireurId, int saisonId, String date, String arme,
                     boolean externe, boolean coupsProfonds, List<String> coups) {
         this.id = id;
         this.tireurId = tireurId;
         this.saisonId = saisonId;
         this.date = date;
-        this.categorieId = categorieId;
+        this.arme = arme;
         this.externe = externe;
         this.coupsProfonds = coupsProfonds;
         this.coups = List.copyOf(coups);
@@ -107,7 +107,7 @@ public class Resultat implements Identifiable {
     public int getTireurId() { return tireurId; }
     public int getSaisonId() { return saisonId; }
     public String getDate() { return date; }
-    public int getCategorieId() { return categorieId; }
+    public String getArme() { return arme; }
     public boolean isExterne() { return externe; }
     public boolean isCoupsProfonds() { return coupsProfonds; }
     public List<String> getCoups() { return coups; }

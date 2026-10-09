@@ -10,19 +10,58 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2>Calendrier :</h2>
+    <h2><svg th:replace="~{fragments :: icone('calendrier')}"></svg> Calendrier</h2>
 
-    <a th:if="${admin}" th:href="@{/calendrier/ajouter}" class="bouton principal">+ Ajouter une date</a>
+    <!-- Le mois, comme sur un téléphone : un point sous les jours où quelque chose est prévu. -->
+    <div class="mois">
+        <a th:href="@{/calendrier(mois=${moisPrecedent})}" class="bouton" aria-label="Mois précédent">‹</a>
+        <strong th:text="${titreMois}">Octobre 2026</strong>
+        <a th:href="@{/calendrier(mois=${moisSuivant})}" class="bouton" aria-label="Mois suivant">›</a>
+    </div>
+    <div class="grille-calendrier">
+        <span class="nom-jour">L</span><span class="nom-jour">M</span><span class="nom-jour">M</span><span class="nom-jour">J</span>
+        <span class="nom-jour">V</span><span class="nom-jour">S</span><span class="nom-jour">D</span>
+        <th:block th:each="semaine : ${semaines}">
+            <a th:each="j : ${semaine}" th:href="@{/calendrier(mois=${mois},jour=${j.date})}" class="jour"
+               th:classappend="${(j.duMois ? '' : ' autre-mois') + (j.aujourdhui ? ' aujourdhui' : '') + (j.choisi ? ' choisi' : '')}">
+                <span th:text="${j.date.dayOfMonth}">1</span>
+                <i class="point" th:if="${j.evenement}"></i>
+            </a>
+        </th:block>
+    </div>
 
-    <p th:if="${#lists.isEmpty(evenements)}">Rien de prévu pour le moment.</p>
-
-    <ul>
-        <li th:each="evenement : ${evenements}">
+    <th:block th:if="${jourChoisi != null}">
+        <h3 th:text="${titreJour}">Jeudi 15 octobre</h3>
+        <a th:if="${admin}" th:href="@{/calendrier/ajouter(date=${jourChoisi})}" class="bouton principal">+ Ajouter ce jour-là</a>
+        <p class="info" th:if="${#lists.isEmpty(evenementsDuJour)}">Rien de prévu ce jour-là.</p>
+        <ul>
+        <li th:each="evenement : ${evenementsDuJour}">
             <strong th:text="${evenement.date}"></strong>
             <span th:unless="${#strings.isEmpty(evenement.heure)}" th:text="'à ' + ${evenement.heure}"></span>
             : <span th:text="${evenement.titre}"></span>
             <span th:unless="${#strings.isEmpty(evenement.description)}" th:text="'— ' + ${evenement.description}"></span>
             <span th:if="${admin}">
+                <br>
+                <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
+                <form th:action="@{/calendrier/{id}/supprimer(id=${evenement.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
+                    <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
+                </form>
+            </span>
+        </li>
+        </ul>
+    </th:block>
+
+    <h3>Prochaines dates</h3>
+    <a th:if="${admin and jourChoisi == null}" th:href="@{/calendrier/ajouter}" class="bouton principal">+ Ajouter une date</a>
+    <p class="info" th:if="${#lists.isEmpty(prochains)}">Rien de prévu pour le moment.</p>
+    <ul>
+        <li th:each="evenement : ${prochains}">
+            <strong th:text="${evenement.date}"></strong>
+            <span th:unless="${#strings.isEmpty(evenement.heure)}" th:text="'à ' + ${evenement.heure}"></span>
+            : <span th:text="${evenement.titre}"></span>
+            <span th:unless="${#strings.isEmpty(evenement.description)}" th:text="'— ' + ${evenement.description}"></span>
+            <span th:if="${admin}">
+                <br>
                 <a th:href="@{/calendrier/{id}/modifier(id=${evenement.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
                 <form th:action="@{/calendrier/{id}/supprimer(id=${evenement.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
                     <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
