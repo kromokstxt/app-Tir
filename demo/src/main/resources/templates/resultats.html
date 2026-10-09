@@ -29,7 +29,7 @@
             <div class="details">
             <span class="note" th:text="${#numbers.formatDecimal(resultat.noteSur100, 1, 1)} + ' / 100'"></span><br>
             <span th:text="${resultat.date}"></span> —
-            <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
+            <span th:text="${resultat.arme}"></span>
             <span class="badge" th:if="${resultat.externe}">Tir externe</span><br>
             <span th:text="${resultat.score} + ' points sur ' + ${resultat.scoreMax}"></span>
             (<span th:text="${#lists.size(resultat.coups)}"></span> coups)

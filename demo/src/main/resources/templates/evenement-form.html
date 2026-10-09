@@ -13,7 +13,7 @@
     <h2 th:text="${evenement == null} ? 'Ajouter une date au calendrier' : 'Modifier une date du calendrier'">Calendrier</h2>
 
     <form th:action="${evenement == null} ? @{/calendrier/ajouter} : @{/calendrier/{id}/modifier(id=${evenement.id})}" method="post">
-        <label>Date : <input type="date" name="date" th:value="${evenement?.date ?: aujourdhui}" required></label>
+        <label>Date : <input type="date" name="date" th:value="${evenement?.date ?: (dateChoisie ?: aujourdhui)}" required></label>
         <label>Heure : <input type="time" name="heure" th:value="${evenement?.heure}"></label>
         <label>Titre : <input type="text" name="titre" th:value="${evenement?.titre}" placeholder="Tir obligatoire" required></label>
         <label>Description : <input type="text" name="description" th:value="${evenement?.description}"></label>

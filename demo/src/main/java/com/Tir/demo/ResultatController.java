@@ -41,18 +41,18 @@ public class ResultatController {
 
     @GetMapping("/ajouter")
     public String ajouterForm(Model model) {
-        model.addAttribute("categorieParDefaut", categorieParDefaut());
+        model.addAttribute("armes", armesProposees());
         return "resultat-form";
     }
 
     @PostMapping("/ajouter")
-    public String ajouter(@RequestParam String date, @RequestParam int categorieId,
+    public String ajouter(@RequestParam String date, @RequestParam int armeId,
                           @RequestParam(defaultValue = "false") boolean externe,
                           @RequestParam(defaultValue = "false") boolean coupsProfonds,
-                          @RequestParam String coups, @RequestParam(required = false) Integer tireurId) {
-        ClubDonnees.trouver(donnees.categories, categorieId);
-        Resultat resultat = new Resultat(donnees.nouvelId(), acces.proprietaire(tireurId), donnees.saisonPour(date),
-                date, categorieId, externe, coupsProfonds, lireCoups(coups, coupsProfonds));
+                          @RequestParam String coups) {
+        Arme arme = armeDuTireur(armeId);
+        Resultat resultat = new Resultat(donnees.nouvelId(), arme.getTireurId(), donnees.saisonPour(date),
+                date, arme.getNom(), externe, coupsProfonds, lireCoups(coups, coupsProfonds));
         donnees.resultats.add(resultat);
         return "redirect:/resultats/" + resultat.getId();
     }
@@ -71,19 +71,19 @@ public class ResultatController {
         Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
         acces.verifierProprietaire(resultat.getTireurId());
         model.addAttribute("resultat", resultat);
-        model.addAttribute("categorieParDefaut", resultat.getCategorieId());
+        model.addAttribute("armes", armesProposees());
         return "resultat-form";
     }
 
     @PostMapping("/{id}/modifier")
-    public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int categorieId,
+    public String modifier(@PathVariable int id, @RequestParam String date, @RequestParam int armeId,
                            @RequestParam(defaultValue = "false") boolean externe,
                            @RequestParam(defaultValue = "false") boolean coupsProfonds,
-                           @RequestParam String coups, @RequestParam(required = false) Integer tireurId) {
+                           @RequestParam String coups) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.resultats, id).getTireurId());
-        ClubDonnees.trouver(donnees.categories, categorieId);
-        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, acces.proprietaire(tireurId), donnees.saisonPour(date),
-                date, categorieId, externe, coupsProfonds, lireCoups(coups, coupsProfonds)));
+        Arme arme = armeDuTireur(armeId);
+        ClubDonnees.remplacer(donnees.resultats, new Resultat(id, arme.getTireurId(), donnees.saisonPour(date),
+                date, arme.getNom(), externe, coupsProfonds, lireCoups(coups, coupsProfonds)));
         return "redirect:/resultats/" + id;
     }
 
@@ -94,13 +94,16 @@ public class ResultatController {
         return "redirect:/resultats";
     }
 
-    // L'arme proposée d'office : la catégorie de la première arme du tireur, sinon la première catégorie.
-    private int categorieParDefaut() {
-        int moi = acces.moi().getId();
-        return donnees.armes.stream().filter(a -> a.getTireurId() == moi).map(Arme::getCategorie)
-                .flatMap(nom -> donnees.categories.stream().filter(c -> c.getNom().equals(nom)))
-                .mapToInt(CategorieTir::getId).findFirst()
-                .orElse(donnees.categories.isEmpty() ? 0 : donnees.categories.get(0).getId());
+    // On tire avec une de ses armes (celles du profil). L'admin voit les armes de tout le monde.
+    private List<Arme> armesProposees() {
+        return donnees.armes.stream().filter(a -> acces.peutVoir(a.getTireurId())).toList();
+    }
+
+    // L'arme choisie doit être à soi (ou, pour l'admin, à n'importe qui : le tir est alors à son propriétaire).
+    private Arme armeDuTireur(int armeId) {
+        Arme arme = ClubDonnees.trouver(donnees.armes, armeId);
+        acces.verifierProprietaire(arme.getTireurId());
+        return arme;
     }
 
     private List<String> lireCoups(String texte, boolean coupsProfonds) {

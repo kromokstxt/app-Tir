@@ -37,6 +37,13 @@ class AccesTests {
         return donnees.tireurParUsername(username).getId();
     }
 
+    // Donne une arme à un tireur et renvoie son numéro.
+    private int armeDe(String username, String categorie, String version) {
+        Arme arme = new Arme(donnees.nouvelId(), categorie, version, idDe(username));
+        donnees.armes.add(arme);
+        return arme.getId();
+    }
+
     @Test
     void sansConnexionOnEstRenvoyeAuLogin() throws Exception {
         mvc.perform(get("/")).andExpect(status().is3xxRedirection()).andExpect(redirectedUrl("/login"));
@@ -100,23 +107,42 @@ class AccesTests {
 
     @Test
     @WithUserDetails("tireur2")
-    void unTireurNEntrePasDeTirAuNomDUnAutre() throws Exception {
-        int categorie = donnees.categories.get(0).getId();
-        // Même s'il essaie de le mettre au nom de tireur1, le tir est à lui.
-        mvc.perform(post("/resultats/ajouter").with(csrf())
-                .param("date", "2026-10-01").param("categorieId", "" + categorie)
-                .param("coups", "10>H 9>BG").param("tireurId", "" + idDe("tireur1")))
-                .andExpect(redirectedUrlPattern("/resultats/*"));
-        assertThat(donnees.resultats).singleElement().extracting(Resultat::getTireurId).isEqualTo(idDe("tireur2"));
+    void onNeTireQuAvecSesPropresArmes() throws Exception {
+        int armeDeTireur1 = armeDe("tireur1", "Fas 90", "");
+        int maArme = armeDe("tireur2", "Fas 57", "03");
 
-        // Et il ne peut ni voir ni modifier ceux d'un autre.
-        donnees.resultats.add(new Resultat(700, idDe("tireur1"), 0, "2026-10-01", categorie, false, false, List.of("10")));
+        // La liste ne propose que mes armes, avec leur nom complet.
+        mvc.perform(get("/resultats/ajouter"))
+                .andExpect(content().string(containsString("Fas 57/03")))
+                .andExpect(content().string(not(containsString("value=\"" + armeDeTireur1 + "\""))));
+        // L'arme d'un autre est refusée, même en trichant.
+        mvc.perform(post("/resultats/ajouter").with(csrf())
+                .param("date", "2026-10-01").param("armeId", "" + armeDeTireur1).param("coups", "10"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/resultats/ajouter").with(csrf())
+                .param("date", "2026-10-01").param("armeId", "" + maArme).param("coups", "10>H 9>BG"))
+                .andExpect(redirectedUrlPattern("/resultats/*"));
+        assertThat(donnees.resultats).singleElement().satisfies(r -> {
+            assertThat(r.getTireurId()).isEqualTo(idDe("tireur2"));
+            assertThat(r.getArme()).isEqualTo("Fas 57/03");
+        });
+
+        // Et il ne peut ni voir ni modifier les tirs d'un autre.
+        donnees.resultats.add(new Resultat(700, idDe("tireur1"), 0, "2026-10-01", "Fas 90", false, false, List.of("10")));
         mvc.perform(get("/resultats/700")).andExpect(status().isForbidden());
         mvc.perform(post("/resultats/700/modifier").with(csrf())
-                .param("date", "2026-10-01").param("categorieId", "" + categorie).param("coups", "0"))
+                .param("date", "2026-10-01").param("armeId", "" + maArme).param("coups", "0"))
                 .andExpect(status().isForbidden());
         mvc.perform(post("/resultats/700/supprimer").with(csrf())).andExpect(status().isForbidden());
         mvc.perform(get("/resultats")).andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*sur 1 tir\\b.*")));
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void sansArmeOnDoitDAbordEnAjouterUne() throws Exception {
+        mvc.perform(get("/resultats/ajouter"))
+                .andExpect(content().string(containsString("Ajoutez d'abord votre arme")))
+                .andExpect(content().string(not(containsString("name=\"armeId\""))));
     }
 
     @Test
@@ -318,11 +344,11 @@ class AccesTests {
     void laSaisonDUnTirEstTrouveeDApresSaDate() throws Exception {
         donnees.saisons.add(new Saison(500, "2025", "2025-01-01", "2025-12-31"));
         donnees.saisons.add(new Saison(501, "2026", "2026-01-01", "2026-12-31"));
-        int categorie = donnees.categories.get(0).getId();
+        int arme = armeDe("tireur1", "Fas 90", "");
 
         for (String date : new String[] {"2026-03-14", "2030-01-01"}) {
             mvc.perform(post("/resultats/ajouter").with(csrf())
-                    .param("date", date).param("categorieId", "" + categorie).param("coups", "10"))
+                    .param("date", date).param("armeId", "" + arme).param("coups", "10"))
                     .andExpect(redirectedUrlPattern("/resultats/*"));
         }
         assertThat(donnees.resultats).extracting(Resultat::getSaisonId).containsExactly(501, 0);
@@ -331,9 +357,9 @@ class AccesTests {
     @Test
     @WithUserDetails("tireur1")
     void unTirExterneEstMarque() throws Exception {
-        int categorie = donnees.categories.get(0).getId();
+        int arme = armeDe("tireur1", "Fas 90", "");
         mvc.perform(post("/resultats/ajouter").with(csrf())
-                .param("date", "2026-10-01").param("categorieId", "" + categorie)
+                .param("date", "2026-10-01").param("armeId", "" + arme)
                 .param("externe", "true").param("coups", "9 9"));
         assertThat(donnees.resultats).singleElement().extracting(Resultat::isExterne).isEqualTo(true);
         mvc.perform(get("/resultats")).andExpect(content().string(containsString("Tir externe")));
@@ -343,13 +369,13 @@ class AccesTests {
     @WithUserDetails("tireur1")
     void lesResultatsMontrentLaMoyenneSur100() throws Exception {
         int t1 = idDe("tireur1");
-        int categorie = donnees.categories.get(0).getId();
+        int arme = armeDe("tireur1", "Fas 90", "");
         // 4 dix → 100 / 100 ; 5, 5, manqué, 5 → 37,5 / 100 ; coups profonds 90 et 80 → 85 / 100.
-        donnees.resultats.add(new Resultat(700, t1, 0, "2026-10-01", categorie, false, false, List.of("10", "10", "10", "10")));
-        donnees.resultats.add(new Resultat(701, t1, 0, "2026-10-02", categorie, false, false, List.of("5", "5", "M", "5")));
-        donnees.resultats.add(new Resultat(702, t1, 0, "2026-10-03", categorie, false, true, List.of("9:90", "8:80")));
+        donnees.resultats.add(new Resultat(700, t1, 0, "2026-10-01", "Fas 90", false, false, List.of("10", "10", "10", "10")));
+        donnees.resultats.add(new Resultat(701, t1, 0, "2026-10-02", "Fas 90", false, false, List.of("5", "5", "M", "5")));
+        donnees.resultats.add(new Resultat(702, t1, 0, "2026-10-03", "Fas 90", false, true, List.of("9:90", "8:80")));
         // Le tir d'un autre ne compte pas dans ma moyenne.
-        donnees.resultats.add(new Resultat(703, idDe("tireur2"), 0, "2026-10-03", categorie, false, false, List.of("0")));
+        donnees.resultats.add(new Resultat(703, idDe("tireur2"), 0, "2026-10-03", "Fas 90", false, false, List.of("0")));
 
         assertThat(donnees.resultats.get(1).getNoteSur100()).isEqualTo(37.5);
         assertThat(donnees.resultats.get(2).getNoteSur100()).isEqualTo(85.0);
@@ -369,11 +395,11 @@ class AccesTests {
     @Test
     @WithUserDetails("tireur1")
     void uneFeuilleDEntrainementGardeLesPointsEtLesFleches() throws Exception {
-        int categorie = donnees.categories.get(0).getId();
+        int arme = armeDe("tireur1", "Fas 90", "");
 
         // À l'entraînement, un coup profond éventuel est ignoré.
         mvc.perform(post("/resultats/ajouter").with(csrf())
-                .param("date", "2026-10-01").param("categorieId", "" + categorie)
+                .param("date", "2026-10-01").param("armeId", "" + arme)
                 .param("coups", "10 9>hd m 0>B 8:77>G"))
                 .andExpect(redirectedUrlPattern("/resultats/*"));
 
@@ -388,11 +414,11 @@ class AccesTests {
     @Test
     @WithUserDetails("tireur1")
     void avecLesCoupsProfondsLesPointsEnSontDeduits() throws Exception {
-        int categorie = donnees.categories.get(0).getId();
+        int arme = armeDe("tireur1", "Fas 90", "");
 
         // Seul le coup profond compte : des points envoyés quand même sont recalculés.
         mvc.perform(post("/resultats/ajouter").with(csrf())
-                .param("date", "2026-10-01").param("categorieId", "" + categorie)
+                .param("date", "2026-10-01").param("armeId", "" + arme)
                 .param("coupsProfonds", "true").param("coups", ":100>H 3:87>BD M :90 :91 :5>G :0"))
                 .andExpect(redirectedUrlPattern("/resultats/*"));
 
@@ -422,7 +448,7 @@ class AccesTests {
     @Test
     @WithUserDetails("tireur1")
     void unCoupMalSaisiEstRefuse() throws Exception {
-        int categorie = donnees.categories.get(0).getId();
+        int arme = armeDe("tireur1", "Fas 90", "");
 
         String[][] essais = {
                 {"false", "10 11"}, {"false", "9 X"}, {"false", ""}, {"false", "-1"}, {"false", "9>Z"},
@@ -431,7 +457,7 @@ class AccesTests {
         };
         for (String[] essai : essais) {
             mvc.perform(post("/resultats/ajouter").with(csrf())
-                    .param("date", "2026-10-01").param("categorieId", "" + categorie)
+                    .param("date", "2026-10-01").param("armeId", "" + arme)
                     .param("coupsProfonds", essai[0]).param("coups", essai[1]))
                     .andExpect(status().isBadRequest());
         }
@@ -482,6 +508,39 @@ class AccesTests {
         mvc.perform(get("/login")).andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*/style-[0-9a-f]{32}\\.css.*")));
     }
 
+    @Test
+    @WithUserDetails("tireur1")
+    void leCalendrierMontreLeMoisEtLesJours() throws Exception {
+        donnees.calendrier.add(new Evenement(800, "2026-11-20", "19:30", "Assemblée générale", "Au stand"));
+
+        // Le mois de novembre 2026 : 30 jours, le 20 a un point.
+        mvc.perform(get("/calendrier").param("mois", "2026-11"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Novembre 2026")))
+                .andExpect(content().string(containsString("mois=2026-10")))
+                .andExpect(content().string(containsString("mois=2026-12")))
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern(
+                        "(?s).*jour=2026-11-20\"[^>]*>\\s*<span>20</span>\\s*<i class=\"point\">.*")));
+        // On touche le 20 : on voit ce qui est prévu.
+        mvc.perform(get("/calendrier").param("mois", "2026-11").param("jour", "2026-11-20"))
+                .andExpect(content().string(containsString("Vendredi 20 novembre")))
+                .andExpect(content().string(containsString("Assemblée générale")));
+        // Un jour sans rien.
+        mvc.perform(get("/calendrier").param("jour", "2026-11-21"))
+                .andExpect(content().string(containsString("Rien de prévu ce jour-là.")));
+        // Une adresse abîmée n'empêche pas d'afficher le calendrier.
+        mvc.perform(get("/calendrier").param("mois", "n'importe quoi").param("jour", "32")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithUserDetails("admin")
+    void lAdminAjouteUneDateSurLeJourChoisi() throws Exception {
+        mvc.perform(get("/calendrier").param("jour", "2026-11-20"))
+                .andExpect(content().string(containsString("/calendrier/ajouter?date=2026-11-20")));
+        mvc.perform(get("/calendrier/ajouter").param("date", "2026-11-20"))
+                .andExpect(content().string(containsString("value=\"2026-11-20\"")));
+    }
+
     private static final String[] PAGES = {
             "/", "/profil", "/profil/modifier",
             "/armes", "/armes/ajouter", "/armes/600/modifier",
@@ -504,7 +563,7 @@ class AccesTests {
         int t1 = idDe("tireur1");
         donnees.armes.add(new Arme(600, "Fas 90", "", t1));
         donnees.licences.add(new Licence(601, "123456", t1));
-        donnees.resultats.add(new Resultat(603, t1, 604, "2026-10-01", 605, false, false, List.of("10>H", "9>BG", "M", "0")));
+        donnees.resultats.add(new Resultat(603, t1, 604, "2026-10-01", "Fas 90", false, false, List.of("10>H", "9>BG", "M", "0")));
         donnees.saisons.add(new Saison(604, "2026", "2026-01-01", "2026-12-31"));
         donnees.categories.add(new CategorieTir(605, "Fusil 300m", 300));
         donnees.classements.add(new Classement(606, 1, 95, 604, t1));

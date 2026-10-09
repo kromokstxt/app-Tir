@@ -22,7 +22,7 @@
     </div>
     <p>
         <span th:text="${resultat.date}"></span> —
-        <span th:text="${@clubDonnees.nomCategorie(resultat.categorieId)}"></span>
+        <span th:text="${resultat.arme}"></span>
         <span class="badge" th:if="${resultat.externe}">Tir externe</span>
         <th:block th:if="${admin}"><br><svg th:replace="~{fragments :: icone('profil')}"></svg> <span th:text="${@clubDonnees.nomTireur(resultat.tireurId)}"></span></th:block>
     </p>
