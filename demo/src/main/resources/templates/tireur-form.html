@@ -15,11 +15,11 @@
     <p class="erreur" th:if="${erreur}" th:text="${erreur}"></p>
 
     <form th:action="${tireur == null} ? @{/tireurs/ajouter} : @{/tireurs/{id}/modifier(id=${tireur.id})}" method="post">
-        <label>Prénom : <input type="text" name="firstName" th:value="${tireur?.firstName}" required></label><br>
-        <label>Nom : <input type="text" name="lastName" th:value="${tireur?.lastName}" required></label><br>
+        <label>Prénom : <input type="text" name="firstName" th:value="${tireur?.firstName}" required></label>
+        <label>Nom : <input type="text" name="lastName" th:value="${tireur?.lastName}" required></label>
         <label th:if="${tireur == null}">Mot de passe : <input type="password" name="password" required><br></label>
         <label th:if="${tireur != null}">Nouveau mot de passe (vide = inchangé) : <input type="password" name="password"><br></label>
-        <label>Admin : <input type="checkbox" name="admin" value="true" th:checked="${tireur?.admin}"></label><br>
+        <label>Admin : <input type="checkbox" name="admin" value="true" th:checked="${tireur?.admin}"></label>
         <button type="submit">Enregistrer</button>
     </form>
 

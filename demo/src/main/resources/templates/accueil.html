@@ -10,7 +10,7 @@
 
     <header class="entete">
         <span class="qui">
-            👤 Bonjour <span th:text="${moi.firstName}"></span>
+            <svg th:replace="~{fragments :: icone('profil')}"></svg> Bonjour <span th:text="${moi.firstName}"></span>
             <span th:if="${admin}">(admin)</span>
         </span>
         <form th:action="@{/logout}" method="post">
@@ -21,25 +21,25 @@
     <h1 th:text="${club.nom}">Stand de tir</h1>
 
     <nav class="tuiles">
-        <a th:href="@{/resultats/ajouter}" class="tuile tir large"><span class="icone">🎯</span>Entrer un tir</a>
-        <a th:href="@{/resultats}" class="tuile resultats"><span class="icone">📊</span>
+        <a th:href="@{/resultats/ajouter}" class="tuile tir large"><svg th:replace="~{fragments :: icone('cible')}"></svg>Entrer un tir</a>
+        <a th:href="@{/resultats}" class="tuile resultats"><svg th:replace="~{fragments :: icone('resultats')}"></svg>
             <span th:text="${admin} ? 'Résultats' : 'Mes résultats'">Mes résultats</span></a>
-        <a th:href="@{/calendrier}" class="tuile calendrier"><span class="icone">📅</span>Calendrier</a>
-        <a th:href="@{/annonces}" class="tuile annonces"><span class="icone">📢</span>Annonces du comité</a>
-        <a th:href="@{/classement}" class="tuile classement"><span class="icone">🏆</span>Classement</a>
-        <a th:href="@{/armes}" class="tuile armes"><span class="icone">🎖️</span>
+        <a th:href="@{/calendrier}" class="tuile calendrier"><svg th:replace="~{fragments :: icone('calendrier')}"></svg>Calendrier</a>
+        <a th:href="@{/annonces}" class="tuile annonces"><svg th:replace="~{fragments :: icone('annonces')}"></svg>Annonces du comité</a>
+        <a th:href="@{/classement}" class="tuile classement"><svg th:replace="~{fragments :: icone('classement')}"></svg>Classement</a>
+        <a th:href="@{/armes}" class="tuile armes"><svg th:replace="~{fragments :: icone('armes')}"></svg>
             <span th:text="${admin} ? 'Armes' : 'Mes armes'">Mes armes</span></a>
-        <a th:href="@{/licences}" class="tuile licences"><span class="icone">📇</span>
+        <a th:href="@{/licences}" class="tuile licences"><svg th:replace="~{fragments :: icone('licence')}"></svg>
             <span th:text="${admin} ? 'Licences' : 'Ma licence'">Ma licence</span></a>
-        <a th:href="@{/profil}" class="tuile profil"><span class="icone">👤</span>Mon profil</a>
+        <a th:href="@{/profil}" class="tuile profil"><svg th:replace="~{fragments :: icone('profil')}"></svg>Mon profil</a>
     </nav>
 
     <th:block th:if="${admin}">
         <h2 class="section">Administration</h2>
         <nav class="tuiles">
-            <a th:href="@{/tireurs}" class="tuile admin"><span class="icone">👥</span>Tireurs</a>
-            <a th:href="@{/saisons}" class="tuile admin"><span class="icone">🗓️</span>Saisons</a>
-            <a th:href="@{/categories}" class="tuile admin"><span class="icone">📋</span>Catégories de tir</a>
+            <a th:href="@{/tireurs}" class="tuile admin"><svg th:replace="~{fragments :: icone('tireurs')}"></svg>Tireurs</a>
+            <a th:href="@{/saisons}" class="tuile admin"><svg th:replace="~{fragments :: icone('saisons')}"></svg>Saisons</a>
+            <a th:href="@{/categories}" class="tuile admin"><svg th:replace="~{fragments :: icone('categories')}"></svg>Catégories de tir</a>
         </nav>
     </th:block>
 

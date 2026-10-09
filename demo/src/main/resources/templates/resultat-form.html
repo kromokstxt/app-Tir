@@ -11,7 +11,7 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2 th:text="${resultat == null} ? '🎯 Entrer un tir' : '🎯 Modifier un tir'">Entrer un tir</h2>
+    <h2><svg th:replace="~{fragments :: icone('cible')}"></svg> <span th:text="${resultat == null} ? 'Entrer un tir' : 'Modifier un tir'">Entrer un tir</span></h2>
 
     <p id="erreur-js" class="erreur" hidden>
         Un problème empêche la saisie des coups. Rechargez la page
@@ -29,15 +29,21 @@
             </select>
         </label>
 
-        <label class="option">
-            <input type="checkbox" name="externe" value="true" th:checked="${resultat != null and resultat.externe}">
-            Tir externe (pas au stand du club)
-        </label>
-        <label class="option">
-            <input type="checkbox" name="coupsProfonds" value="true" id="avec-profond" onchange="changerType()"
-                   th:checked="${resultat != null and resultat.coupsProfonds}">
-            Coups profonds (sur 100, 100 = plein centre)
-        </label>
+        <!-- Boutons marche / arrêt : touchés, ils deviennent bleus. -->
+        <input type="hidden" name="externe" id="externe" th:value="${resultat != null and resultat.externe}">
+        <input type="hidden" name="coupsProfonds" id="avec-profond" th:value="${resultat != null and resultat.coupsProfonds}">
+        <div class="interrupteurs">
+            <button type="button" class="interrupteur" id="bouton-externe" onclick="basculerExterne()">
+                <svg th:replace="~{fragments :: icone('externe')}"></svg> Tir externe
+            </button>
+            <button type="button" class="interrupteur" id="bouton-profond" onclick="changerType()">
+                <svg th:replace="~{fragments :: icone('cible')}"></svg> Coups profonds
+            </button>
+            <button type="button" class="interrupteur" id="bouton-fleches" onclick="basculerFleches()">
+                <svg th:replace="~{fragments :: icone('fleches')}"></svg> Flèches
+            </button>
+        </div>
+        <p class="aide" id="aide-profond" hidden>Coups profonds : tapez la valeur sur 100 (100 = plein centre), les points sont calculés.</p>
 
         <h3>Les coups</h3>
         <p class="etape" id="consigne"></p>
@@ -79,7 +85,8 @@
         </div>
 
         <!-- La flèche du coup (facultative) : direction depuis le centre -->
-        <p class="sous-titre">Flèche (facultatif) :</p>
+        <div id="zone-fleches" hidden>
+        <p class="sous-titre">Flèche du coup :</p>
         <div class="clavier fleches" id="etape-direction">
             <button type="button" onclick="choisirDirection('HG')">↖</button>
             <button type="button" onclick="choisirDirection('H')">↑</button>
@@ -90,6 +97,7 @@
             <button type="button" onclick="choisirDirection('BG')">↙</button>
             <button type="button" onclick="choisirDirection('B')">↓</button>
             <button type="button" onclick="choisirDirection('BD')">↘</button>
+        </div>
         </div>
 
         <p>
@@ -118,7 +126,7 @@
         let profond = '';     // chiffres du coup profond pendant qu'on le tape
 
         function avecProfond() {
-            return document.getElementById('avec-profond').checked;
+            return document.getElementById('avec-profond').value === 'true';
         }
 
         function coups() {
@@ -198,13 +206,28 @@
             }
         }
 
+        // Bouton « Tir externe » : marche / arrêt.
+        function basculerExterne() {
+            const champExterne = document.getElementById('externe');
+            champExterne.value = champExterne.value === 'true' ? 'false' : 'true';
+            majEtape();
+        }
+
+        // Bouton « Flèches » : montre ou cache les flèches (celles déjà données restent).
+        let avecFleches = false;
+        function basculerFleches() {
+            avecFleches = !avecFleches;
+            majEtape();
+        }
+
         function changerType() {
             // Les coups n'ont pas les mêmes infos : changer d'option recommence la saisie.
             if ((coups().length > 0 || enCours !== null)
                     && !confirm('Changer cette option efface les coups déjà saisis. Continuer ?')) {
-                document.getElementById('avec-profond').checked = !avecProfond();
                 return;
             }
+            const champProfond = document.getElementById('avec-profond');
+            champProfond.value = avecProfond() ? 'false' : 'true';
             champ.value = '';
             enCours = null;
             profond = '';
@@ -220,6 +243,11 @@
         // Montre les bons boutons, la consigne, le total, la liste des coups et la cible.
         function majEtape() {
             const liste = coups();
+            document.getElementById('bouton-externe').setAttribute('aria-pressed', document.getElementById('externe').value === 'true');
+            document.getElementById('bouton-profond').setAttribute('aria-pressed', avecProfond());
+            document.getElementById('bouton-fleches').setAttribute('aria-pressed', avecFleches);
+            document.getElementById('aide-profond').hidden = !avecProfond();
+            document.getElementById('zone-fleches').hidden = !avecFleches;
             const numero = liste.length + 1;
             document.getElementById('etape-points').hidden = avecProfond();
             document.getElementById('etape-profond').hidden = !avecProfond();
@@ -238,7 +266,7 @@
             } else {
                 consigne = 'Coup ' + numero + ' : '
                     + (enCours.profond !== null ? enCours.profond + ' (' + enCours.points + ' points)' : enCours.points + ' points')
-                    + ' — touchez la flèche, ou passez au coup suivant.';
+                    + (avecFleches ? ' — touchez la flèche, ou passez au coup suivant.' : ' — touchez le coup suivant.');
             }
             document.getElementById('consigne').textContent = consigne;
 
@@ -267,6 +295,8 @@
                 montrerErreur();
                 return;
             }
+            // En modifiant un tir qui a des flèches, on les montre d'office.
+            avecFleches = coups().some(function (c) { return c.direction; });
             majEtape();
         });
     </script>

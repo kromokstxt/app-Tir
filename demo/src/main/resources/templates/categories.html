@@ -19,9 +19,9 @@
             <span th:text="${categorie.nom}"></span>
             (<span th:text="${categorie.distance}"></span> m)
             <span th:if="${admin}">
-                <a th:href="@{/categories/{id}/modifier(id=${categorie.id})}" class="bouton">✏️ Modifier</a>
+                <a th:href="@{/categories/{id}/modifier(id=${categorie.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
                 <form th:action="@{/categories/{id}/supprimer(id=${categorie.id})}" method="post" onsubmit="return confirm('Supprimer ?')">
-                    <button type="submit">🗑️ Supprimer</button>
+                    <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
                 </form>
             </span>
         </li>

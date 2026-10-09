@@ -13,9 +13,9 @@
     <h2 th:text="${saison == null} ? 'Ajouter une saison' : 'Modifier une saison'">Saison</h2>
 
     <form th:action="${saison == null} ? @{/saisons/ajouter} : @{/saisons/{id}/modifier(id=${saison.id})}" method="post">
-        <label>Année : <input type="text" name="annee" th:value="${saison?.annee}" placeholder="2026-2027" required></label><br>
-        <label>Début : <input type="date" name="dateDebut" th:value="${saison?.dateDebut}" required></label><br>
-        <label>Fin : <input type="date" name="dateFin" th:value="${saison?.dateFin}" required></label><br>
+        <label>Année : <input type="text" name="annee" th:value="${saison?.annee}" placeholder="2026-2027" required></label>
+        <label>Début : <input type="date" name="dateDebut" th:value="${saison?.dateDebut}" required></label>
+        <label>Fin : <input type="date" name="dateFin" th:value="${saison?.dateFin}" required></label>
         <button type="submit">Enregistrer</button>
     </form>
 

@@ -11,9 +11,9 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2 th:text="${admin} ? '📊 Résultats' : '📊 Mes résultats'">Mes résultats</h2>
+    <h2><svg th:replace="~{fragments :: icone('resultats')}"></svg> <span th:text="${admin} ? 'Résultats' : 'Mes résultats'">Mes résultats</span></h2>
 
-    <a th:href="@{/resultats/ajouter}" class="bouton principal">🎯 Entrer un tir</a>
+    <a th:href="@{/resultats/ajouter}" class="bouton principal"><svg th:replace="~{fragments :: icone('cible')}"></svg> Entrer un tir</a>
 
     <div class="moyenne" th:if="${moyenne >= 0}">
         <span th:text="${admin} ? 'Moyenne de tous les tirs' : 'Ma moyenne'">Ma moyenne</span>
@@ -33,13 +33,13 @@
             <span class="badge" th:if="${resultat.externe}">Tir externe</span><br>
             <span th:text="${resultat.score} + ' points sur ' + ${resultat.scoreMax}"></span>
             (<span th:text="${#lists.size(resultat.coups)}"></span> coups)
-            <th:block th:if="${admin}"><br>👤 <span th:text="${@clubDonnees.nomTireur(resultat.tireurId)}"></span></th:block>
+            <th:block th:if="${admin}"><br><svg th:replace="~{fragments :: icone('profil')}"></svg> <span th:text="${@clubDonnees.nomTireur(resultat.tireurId)}"></span></th:block>
             </div>
-            <a th:href="@{/resultats/{id}(id=${resultat.id})}" class="bouton">🎯 Voir la cible</a>
-            <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}" class="bouton">✏️ Modifier</a>
+            <a th:href="@{/resultats/{id}(id=${resultat.id})}" class="bouton"><svg th:replace="~{fragments :: icone('cible')}"></svg> Voir la cible</a>
+            <a th:href="@{/resultats/{id}/modifier(id=${resultat.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
             <form th:action="@{/resultats/{id}/supprimer(id=${resultat.id})}" method="post"
                   onsubmit="return confirm('Supprimer ce tir ?')">
-                <button type="submit">🗑️ Supprimer</button>
+                <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
             </form>
         </li>
     </ul>

@@ -19,9 +19,9 @@
             <span th:text="${tireur.firstName}"></span>
             <span th:text="${tireur.lastName}"></span>
             <span th:if="${tireur.admin}">— admin</span>
-            <a th:href="@{/tireurs/{id}/modifier(id=${tireur.id})}" class="bouton">✏️ Modifier</a>
+            <a th:href="@{/tireurs/{id}/modifier(id=${tireur.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
             <form th:if="${tireur.id != moi.id}" th:action="@{/tireurs/{id}/supprimer(id=${tireur.id})}" method="post" style="display:inline">
-                <button type="submit">🗑️ Supprimer</button>
+                <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
             </form>
         </li>
     </ul>
