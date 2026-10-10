@@ -218,3 +218,9 @@ li::after { content: ""; display: block; clear: both; }
 .jour.choisi:not(.aujourdhui) { background: #111; }
 .jour .point { position: absolute; bottom: 12%; width: 6px; height: 6px; border-radius: 50%; background: #8a93a3; }
 .jour.choisi .point { background: #fff; }
+
+.nouveau-mdp { font-size: 1.15em; font-weight: 700; }
+.bouton-mdp { background: #fff; }
+li form button.bouton-mdp[type=submit] { color: #111; border-color: #8a93a3; }
+.retirer-arme { background: #fff; color: var(--rouge); border-color: var(--rouge); font-size: 0.85em; min-height: 44px; }
+.ligne-arme { border-left: 4px solid #dde2ea; padding-left: 10px; margin: 8px 0; }

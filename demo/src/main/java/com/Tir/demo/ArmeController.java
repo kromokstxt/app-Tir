@@ -63,10 +63,10 @@ public class ArmeController {
     }
 
     @PostMapping("/{id}/supprimer")
-    public String supprimer(@PathVariable int id) {
+    public String supprimer(@PathVariable int id, @RequestParam(defaultValue = "") String retour) {
         acces.verifierProprietaire(ClubDonnees.trouver(donnees.armes, id).getTireurId());
         ClubDonnees.supprimer(donnees.armes, id);
-        return "redirect:/armes";
+        return "profil".equals(retour) ? "redirect:/profil" : "redirect:/armes";
     }
 
     private void verifierCategorie(String categorie, String version) {

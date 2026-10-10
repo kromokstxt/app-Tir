@@ -27,7 +27,7 @@
         <!-- 4 lignes : la première est visible, le bouton fait apparaître les suivantes. -->
         <div th:each="ligne, etat : ${lignesArme}" class="ligne-arme"
              th:hidden="${etat.index > 0 and #strings.isEmpty(ligne[0])}">
-            <label>Arme <span th:text="${etat.count}"></span> :
+            <label>Arme :
                 <select name="categorie" onchange="montrerVersion(this)">
                     <option value="">— aucune —</option>
                     <option th:each="c : ${categoriesArme}" th:value="${c}" th:text="${c}"
@@ -40,6 +40,7 @@
                             th:selected="${v == ligne[1]}"></option>
                 </select>
             </label>
+            <button type="button" class="retirer-arme" onclick="retirerArme(this)">✕ Retirer cette arme</button>
         </div>
         <button type="button" id="ajouter-arme" onclick="ajouterArme()">+ Ajouter une arme</button><br><br>
 
@@ -54,6 +55,31 @@
             choix.closest('.ligne-arme').querySelector('.version-57').hidden = choix.value !== 'Fas 57';
         }
         document.querySelectorAll('.ligne-arme select[name=categorie]').forEach(montrerVersion);
+
+        // Retire une arme : la ligne est vidée et cachée (la première reste affichée, simplement vidée).
+        function retirerArme(bouton) {
+            const ligne = bouton.closest('.ligne-arme');
+            ligne.querySelector('select[name=categorie]').value = '';
+            montrerVersion(ligne.querySelector('select[name=categorie]'));
+            const visibles = document.querySelectorAll('.ligne-arme:not([hidden])');
+            if (visibles.length > 1) {
+                ligne.hidden = true;
+                ligne.parentNode.insertBefore(ligne, document.getElementById('ajouter-arme'));  // réutilisée en dernier
+            }
+            document.getElementById('ajouter-arme').hidden = false;
+            majRetirer();
+        }
+
+        // Le bouton « Retirer » n'apparaît que sur une ligne où une arme est choisie.
+        function majRetirer() {
+            document.querySelectorAll('.ligne-arme').forEach(function (ligne) {
+                ligne.querySelector('.retirer-arme').hidden = ligne.querySelector('select[name=categorie]').value === '';
+            });
+        }
+        document.querySelectorAll('.ligne-arme select[name=categorie]').forEach(function (choix) {
+            choix.addEventListener('change', majRetirer);
+        });
+        majRetirer();
 
         // Affiche la ligne d'arme suivante ; le bouton disparaît quand les 4 sont visibles.
         function ajouterArme() {

@@ -41,7 +41,7 @@ public class ResultatController {
 
     @GetMapping("/ajouter")
     public String ajouterForm(Model model) {
-        model.addAttribute("armes", armesProposees());
+        model.addAttribute("armes", armesDe(acces.moi().getId()));
         return "resultat-form";
     }
 
@@ -50,7 +50,8 @@ public class ResultatController {
                           @RequestParam(defaultValue = "false") boolean externe,
                           @RequestParam(defaultValue = "false") boolean coupsProfonds,
                           @RequestParam String coups) {
-        Arme arme = armeDuTireur(armeId);
+        // On entre toujours un tir pour soi, avec une de ses armes (l'admin aussi).
+        Arme arme = armeDe(acces.moi().getId(), armeId);
         Resultat resultat = new Resultat(donnees.nouvelId(), arme.getTireurId(), donnees.saisonPour(date),
                 date, arme.getNom(), externe, coupsProfonds, lireCoups(coups, coupsProfonds));
         donnees.resultats.add(resultat);
@@ -71,7 +72,7 @@ public class ResultatController {
         Resultat resultat = ClubDonnees.trouver(donnees.resultats, id);
         acces.verifierProprietaire(resultat.getTireurId());
         model.addAttribute("resultat", resultat);
-        model.addAttribute("armes", armesProposees());
+        model.addAttribute("armes", armesDe(resultat.getTireurId()));
         return "resultat-form";
     }
 
@@ -80,8 +81,10 @@ public class ResultatController {
                            @RequestParam(defaultValue = "false") boolean externe,
                            @RequestParam(defaultValue = "false") boolean coupsProfonds,
                            @RequestParam String coups) {
-        acces.verifierProprietaire(ClubDonnees.trouver(donnees.resultats, id).getTireurId());
-        Arme arme = armeDuTireur(armeId);
+        Resultat ancien = ClubDonnees.trouver(donnees.resultats, id);
+        acces.verifierProprietaire(ancien.getTireurId());
+        // Le tir reste au même tireur, avec une de ses armes.
+        Arme arme = armeDe(ancien.getTireurId(), armeId);
         ClubDonnees.remplacer(donnees.resultats, new Resultat(id, arme.getTireurId(), donnees.saisonPour(date),
                 date, arme.getNom(), externe, coupsProfonds, lireCoups(coups, coupsProfonds)));
         return "redirect:/resultats/" + id;
@@ -94,15 +97,17 @@ public class ResultatController {
         return "redirect:/resultats";
     }
 
-    // On tire avec une de ses armes (celles du profil). L'admin voit les armes de tout le monde.
-    private List<Arme> armesProposees() {
-        return donnees.armes.stream().filter(a -> acces.peutVoir(a.getTireurId())).toList();
+    // On tire avec une de ses armes (celles du profil).
+    private List<Arme> armesDe(int tireurId) {
+        return donnees.armes.stream().filter(a -> a.getTireurId() == tireurId).toList();
     }
 
-    // L'arme choisie doit être à soi (ou, pour l'admin, à n'importe qui : le tir est alors à son propriétaire).
-    private Arme armeDuTireur(int armeId) {
+    // L'arme choisie doit appartenir à ce tireur, sinon c'est refusé.
+    private Arme armeDe(int tireurId, int armeId) {
         Arme arme = ClubDonnees.trouver(donnees.armes, armeId);
-        acces.verifierProprietaire(arme.getTireurId());
+        if (arme.getTireurId() != tireurId) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         return arme;
     }
 
