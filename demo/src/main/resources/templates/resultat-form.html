@@ -31,7 +31,7 @@
         <label>Arme :
             <select name="armeId">
                 <option th:each="a : ${armes}" th:value="${a.id}"
-                        th:text="${a.nom} + (${admin} ? ' — ' + ${@clubDonnees.nomTireur(a.tireurId)} : '')"
+                        th:text="${a.nom}"
                         th:selected="${resultat != null and a.nom == resultat.arme and a.tireurId == resultat.tireurId}"></option>
             </select>
         </label>
@@ -50,7 +50,7 @@
                 <svg th:replace="~{fragments :: icone('fleches')}"></svg> Flèches
             </button>
         </div>
-        <p class="aide" id="aide-profond" hidden>Coups profonds : tapez la valeur sur 100 (100 = plein centre), les points sont calculés.</p>
+        <p class="aide" id="aide-profond" hidden>Coups profonds : tapez la valeur sur 100 (100 = plein centre), les points sont calculés. Pas besoin de OK, sauf pour 1 à 10.</p>
 
         <h3>Les coups</h3>
         <p class="etape" id="consigne"></p>
@@ -91,9 +91,8 @@
             </div>
         </div>
 
-        <!-- La flèche du coup (facultative) : direction depuis le centre -->
+        <!-- Avec le bouton « Flèches » : après chaque coup, les flèches remplacent les chiffres. -->
         <div id="zone-fleches" hidden>
-        <p class="sous-titre">Flèche du coup :</p>
         <div class="clavier fleches" id="etape-direction">
             <button type="button" onclick="choisirDirection('HG')">↖</button>
             <button type="button" onclick="choisirDirection('H')">↑</button>
@@ -163,7 +162,14 @@
         function chiffre(c) {
             if (profond === '') terminerCoup();   // on commence le coup suivant
             if ((profond + c).length <= 3 && Number(profond + c) <= 100) profond += c;
-            majEtape();
+            // Pas besoin de OK quand le nombre ne peut plus grandir (0, 11 à 99, 100).
+            // Il reste à toucher OK seulement pour 1 à 10, qui pourraient encore devenir 10 à 100.
+            const valeur = Number(profond);
+            if (profond === '0' || valeur >= 11) {
+                validerProfond();
+            } else {
+                majEtape();
+            }
         }
 
         function effacerChiffre() {
@@ -254,18 +260,17 @@
             document.getElementById('bouton-profond').setAttribute('aria-pressed', avecProfond());
             document.getElementById('bouton-fleches').setAttribute('aria-pressed', avecFleches);
             document.getElementById('aide-profond').hidden = !avecProfond();
-            document.getElementById('zone-fleches').hidden = !avecFleches;
+            // Avec les flèches, une fois le coup entré, les flèches prennent la place des chiffres.
+            const attendFleche = avecFleches && enCours !== null && profond === '';
+            document.getElementById('zone-fleches').hidden = !attendFleche;
             const numero = liste.length + 1;
-            document.getElementById('etape-points').hidden = avecProfond();
-            document.getElementById('etape-profond').hidden = !avecProfond();
+            document.getElementById('etape-points').hidden = avecProfond() || attendFleche;
+            document.getElementById('etape-profond').hidden = !avecProfond() || attendFleche;
             document.getElementById('profond-en-cours').textContent = profond;
-            document.querySelectorAll('#etape-direction button').forEach(function (b) {
-                b.disabled = enCours === null || profond !== '';
-            });
 
             let consigne;
             if (profond !== '') {
-                consigne = 'Coup ' + numero + ' : coup profond ' + profond + ' — touchez OK.';
+                consigne = 'Coup ' + numero + ' : coup profond ' + profond + ' — touchez OK, ou continuez le nombre.';
             } else if (enCours === null) {
                 consigne = 'Coup ' + numero + ' : ' + (avecProfond()
                     ? 'tapez le coup profond (sur 100) puis OK, ou M = manqué.'
@@ -273,7 +278,7 @@
             } else {
                 consigne = 'Coup ' + numero + ' : '
                     + (enCours.profond !== null ? enCours.profond + ' (' + enCours.points + ' points)' : enCours.points + ' points')
-                    + (avecFleches ? ' — touchez la flèche, ou passez au coup suivant.' : ' — touchez le coup suivant.');
+                    + (avecFleches ? ' — touchez la flèche.' : ' — touchez le coup suivant.');
             }
             document.getElementById('consigne').textContent = consigne;
 

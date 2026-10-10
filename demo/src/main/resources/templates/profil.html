@@ -10,12 +10,31 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2>Mon profil</h2>
+    <h2><svg th:replace="~{fragments :: icone('profil')}"></svg> Mon profil</h2>
 
-    <p>Prénom : <span th:text="${moi.firstName}"></span></p>
-    <p>Nom : <span th:text="${moi.lastName}"></span></p>
+    <p>Prénom : <strong th:text="${moi.firstName}"></strong></p>
+    <p>Nom : <strong th:text="${moi.lastName}"></strong></p>
+    <a th:href="@{/profil/modifier}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier mon nom ou mot de passe</a>
 
-    <a th:href="@{/profil/modifier}">Modifier mon profil</a>
+    <h3><svg th:replace="~{fragments :: icone('licence')}"></svg> Ma licence</h3>
+    <p th:if="${#lists.isEmpty(mesLicences)}">Pas encore de numéro de licence.</p>
+    <p th:each="licence : ${mesLicences}">N° <strong th:text="${licence.numero}"></strong></p>
+    <a th:href="@{/licences}" class="bouton">Gérer ma licence</a>
+
+    <h3><svg th:replace="~{fragments :: icone('armes')}"></svg> Mes armes</h3>
+    <p th:if="${#lists.isEmpty(mesArmes)}">Pas encore d'arme.</p>
+    <ul>
+        <li th:each="arme : ${mesArmes}">
+            <strong th:text="${arme.nom}"></strong>
+            <form th:action="@{/armes/{id}/supprimer(id=${arme.id})}" method="post"
+                  th:data-confirmation="|Retirer ${arme.nom} de mes armes ?|"
+                  onsubmit="return confirm(this.dataset.confirmation)">
+                <input type="hidden" name="retour" value="profil">
+                <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Retirer</button>
+            </form>
+        </li>
+    </ul>
+    <a th:href="@{/armes/ajouter}" class="bouton principal">+ Ajouter une arme</a>
 
 </body>
 </html>

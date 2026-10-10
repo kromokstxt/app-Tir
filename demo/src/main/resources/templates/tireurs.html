@@ -10,17 +10,26 @@
 
     <div th:replace="~{fragments :: entete}"></div>
 
-    <h2>Tireurs :</h2>
+    <h2><svg th:replace="~{fragments :: icone('tireurs')}"></svg> Tireurs</h2>
+
+    <p class="info nouveau-mdp" th:if="${message}" th:text="${message}"></p>
+    <p class="aide">Les mots de passe sont enregistrés brouillés : personne ne peut les relire.
+        Si un membre a oublié le sien, touchez « Nouveau mot de passe » et donnez-lui celui qui s'affiche.</p>
 
     <a th:href="@{/tireurs/ajouter}" class="bouton principal">+ Ajouter un tireur</a>
 
     <ul>
         <li th:each="tireur : ${shooters}">
-            <span th:text="${tireur.firstName}"></span>
-            <span th:text="${tireur.lastName}"></span>
-            <span th:if="${tireur.admin}">— admin</span>
+            <strong th:text="${tireur.firstName + ' ' + tireur.lastName}"></strong>
+            <span th:if="${tireur.admin}">— admin</span><br>
             <a th:href="@{/tireurs/{id}/modifier(id=${tireur.id})}" class="bouton"><svg th:replace="~{fragments :: icone('modifier')}"></svg> Modifier</a>
-            <form th:if="${tireur.id != moi.id}" th:action="@{/tireurs/{id}/supprimer(id=${tireur.id})}" method="post" style="display:inline">
+            <form th:action="@{/tireurs/{id}/nouveau-mot-de-passe(id=${tireur.id})}" method="post"
+                  th:data-confirmation="|Donner un nouveau mot de passe à ${tireur.firstName} ${tireur.lastName} ?|"
+                  onsubmit="return confirm(this.dataset.confirmation)">
+                <button type="submit" class="bouton-mdp">Nouveau mot de passe</button>
+            </form>
+            <form th:if="${tireur.id != moi.id}" th:action="@{/tireurs/{id}/supprimer(id=${tireur.id})}" method="post"
+                  onsubmit="return confirm('Supprimer ce tireur et tous ses tirs ?')">
                 <button type="submit"><svg th:replace="~{fragments :: icone('supprimer')}"></svg> Supprimer</button>
             </form>
         </li>

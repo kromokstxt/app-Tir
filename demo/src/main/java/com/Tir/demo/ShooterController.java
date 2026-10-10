@@ -7,10 +7,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.security.SecureRandom;
 
 // Gestion de tous les tireurs : réservé à l'admin.
 @Controller
 public class ShooterController {
+
+    private static final SecureRandom HASARD = new SecureRandom();
 
     private final ClubDonnees donnees;
     private final Acces acces;
@@ -76,6 +81,20 @@ public class ShooterController {
         String motDePasse = password.isBlank() ? ancien.getPassword() : encoder.encode(password);
         ClubDonnees.remplacer(donnees.tireurs, new Shooter(id, firstName, lastName, ancien.getClubId(),
                 ancien.getUsername(), motDePasse, admin));
+        return "redirect:/tireurs";
+    }
+
+    // Les mots de passe sont enregistrés brouillés : personne ne peut les relire, pas même l'admin.
+    // Si un membre a oublié le sien, l'admin lui en donne un nouveau, affiché une seule fois.
+    @PostMapping("/tireurs/{id}/nouveau-mot-de-passe")
+    public String nouveauMotDePasse(@PathVariable int id, RedirectAttributes redirection) {
+        acces.verifierAdmin();
+        Shooter t = ClubDonnees.trouver(donnees.tireurs, id);
+        String motDePasse = String.format("%06d", HASARD.nextInt(1_000_000));
+        ClubDonnees.remplacer(donnees.tireurs, new Shooter(t.getId(), t.getFirstName(), t.getLastName(), t.getClubId(),
+                t.getUsername(), encoder.encode(motDePasse), t.isAdmin()));
+        redirection.addFlashAttribute("message",
+                "Nouveau mot de passe de " + t.getFirstName() + " " + t.getLastName() + " : " + motDePasse);
         return "redirect:/tireurs";
     }
 

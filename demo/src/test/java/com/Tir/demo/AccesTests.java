@@ -541,6 +541,70 @@ class AccesTests {
                 .andExpect(content().string(containsString("value=\"2026-11-20\"")));
     }
 
+    @Test
+    @WithUserDetails("admin")
+    void lAdminDonneUnNouveauMotDePasse() throws Exception {
+        int t1 = idDe("tireur1");
+        String message = (String) mvc.perform(post("/tireurs/" + t1 + "/nouveau-mot-de-passe").with(csrf()))
+                .andExpect(redirectedUrl("/tireurs"))
+                .andReturn().getFlashMap().get("message");
+        assertThat(message).matches("Nouveau mot de passe de Pierre Exemple : \\d{6}");
+        String motDePasse = message.substring(message.length() - 6);
+
+        // L'ancien ne marche plus, le nouveau oui.
+        mvc.perform(formLogin().user("Pierre Exemple").password("tireur1")).andExpect(redirectedUrl("/login?error"));
+        mvc.perform(formLogin().user("Pierre Exemple").password(motDePasse)).andExpect(redirectedUrl("/"));
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void unTireurNePeutPasChangerLeMotDePasseDUnAutre() throws Exception {
+        mvc.perform(post("/tireurs/" + idDe("tireur2") + "/nouveau-mot-de-passe").with(csrf()))
+                .andExpect(status().isForbidden());
+        mvc.perform(formLogin().user("Marie Exemple").password("tireur2")).andExpect(redirectedUrl("/"));
+    }
+
+    @Test
+    @WithUserDetails("admin")
+    void lAdminEntreSesTirsAvecSesArmes() throws Exception {
+        int armeDePierre = armeDe("tireur1", "Fas 57", "02");
+        int armeAdmin = armeDe("admin", "Mousqueton", "");
+
+        // Le formulaire ne propose que les armes de l'admin, sans nom de tireur.
+        mvc.perform(get("/resultats/ajouter"))
+                .andExpect(content().string(containsString("Mousqueton")))
+                .andExpect(content().string(not(containsString("Fas 57/02"))))
+                .andExpect(content().string(not(containsString("Pierre Exemple"))));
+        mvc.perform(post("/resultats/ajouter").with(csrf())
+                .param("date", "2026-10-01").param("armeId", "" + armeDePierre).param("coups", "10"))
+                .andExpect(status().isForbidden());
+
+        // En modifiant le tir de Pierre, ce sont les armes de Pierre qui sont proposées.
+        donnees.resultats.add(new Resultat(700, idDe("tireur1"), 0, "2026-10-01", "Fas 57/02", false, false, List.of("9")));
+        mvc.perform(get("/resultats/700/modifier"))
+                .andExpect(content().string(containsString("Fas 57/02")))
+                .andExpect(content().string(not(containsString("Mousqueton"))));
+        mvc.perform(post("/resultats/700/modifier").with(csrf())
+                .param("date", "2026-10-01").param("armeId", "" + armeAdmin).param("coups", "10"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void onRetireUneArmeDepuisSonProfil() throws Exception {
+        int arme = armeDe("tireur1", "Fas 57", "03");
+        mvc.perform(get("/profil"))
+                .andExpect(content().string(containsString("Fas 57/03")))
+                .andExpect(content().string(containsString("Retirer")));
+        mvc.perform(post("/armes/" + arme + "/supprimer").with(csrf()).param("retour", "profil"))
+                .andExpect(redirectedUrl("/profil"));
+        assertThat(donnees.armes).isEmpty();
+        // Un autre « retour » ne mène qu'à la liste des armes.
+        int autre = armeDe("tireur1", "Fas 90", "");
+        mvc.perform(post("/armes/" + autre + "/supprimer").with(csrf()).param("retour", "https://ailleurs.example"))
+                .andExpect(redirectedUrl("/armes"));
+    }
+
     private static final String[] PAGES = {
             "/", "/profil", "/profil/modifier",
             "/armes", "/armes/ajouter", "/armes/600/modifier",

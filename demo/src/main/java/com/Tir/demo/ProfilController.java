@@ -22,7 +22,10 @@ public class ProfilController {
     }
 
     @GetMapping("/profil")
-    public String profil() {
+    public String profil(Model model) {
+        int moi = acces.moi().getId();
+        model.addAttribute("mesArmes", donnees.armes.stream().filter(a -> a.getTireurId() == moi).toList());
+        model.addAttribute("mesLicences", donnees.licences.stream().filter(l -> l.getTireurId() == moi).toList());
         return "profil";
     }
 
