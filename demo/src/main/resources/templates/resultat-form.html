@@ -63,6 +63,7 @@
         <div id="scan" class="scan" hidden>
             <img id="scan-photo" alt="Photo de la feuille">
             <p id="scan-statut" class="etape"></p>
+            <p class="aide">Conseil : photo bien droite, de près, le ticket blanc entier dans l'image. Les flèches ne sont pas lues sur la photo.</p>
             <div id="scan-verifier" hidden>
                 <label>Coups lus (un espace entre chaque coup, M = manqué) :
                     <input type="text" id="scan-coups" inputmode="text" autocomplete="off">
@@ -352,8 +353,12 @@
                 const valeurs = Scan.lireFeuille(texte, avecProfond());
                 document.getElementById('scan-coups').value = valeurs.join(' ');
                 document.getElementById('scan-verifier').hidden = false;
+                const douteux = Scan.aVerifier(valeurs, avecProfond());
                 statutScan(valeurs.length > 0
                     ? valeurs.length + ' coups lus. Comparez avec votre feuille, corrigez si besoin, puis touchez « Utiliser ces coups ».'
+                      + (douteux.length > 0 ? ' À vérifier surtout : ' + douteux.map(function (n) {
+                            return 'coup ' + n + ' (' + valeurs[n - 1] + ')';
+                        }).join(', ') + '.' : '')
                     : 'Aucun coup lu. Reprenez la photo de près, bien à plat et sans reflet, ou entrez les coups à la main.');
             } catch (e) {
                 statutScan('La lecture n\'a pas marché. Réessayez, ou entrez les coups à la main.');
