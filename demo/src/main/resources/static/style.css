@@ -224,3 +224,25 @@ li::after { content: ""; display: block; clear: both; }
 li form button.bouton-mdp[type=submit] { color: #111; border-color: #8a93a3; }
 .retirer-arme { background: #fff; color: var(--rouge); border-color: var(--rouge); font-size: 0.85em; min-height: 44px; }
 .ligne-arme { border-left: 4px solid #dde2ea; padding-left: 10px; margin: 8px 0; }
+
+/* La moyenne se touche pour voir sa cible. */
+a.lien-moyenne { display: block; color: #fff; text-decoration: none; }
+a.lien-moyenne .voir { display: block; margin-top: 6px; font-weight: 700; text-decoration: underline; }
+
+/* Les quatre périodes de la moyenne. */
+.periodes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; max-width: 460px; }
+.periode {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 10px; border: 2px solid #8a93a3; border-radius: 12px; color: #111; text-decoration: none; background: #fff;
+}
+.periode strong { font-size: 1.5em; }
+.periode small { color: #555; }
+.periode.choisie { background: var(--bleu); border-color: var(--bleu); color: #fff; }
+.periode.choisie small { color: #dfe7f5; }
+
+/* Lire la feuille en photo */
+.bouton-photo { display: inline-flex; align-items: center; gap: 8px; background: #fff; border-color: var(--bleu); color: var(--bleu); }
+.scan { border: 2px solid #dde2ea; border-radius: 12px; padding: 12px; margin: 10px 0; }
+.scan img { max-width: 100%; max-height: 260px; display: block; margin: 0 auto 8px; border-radius: 8px; }
+.scan input[type=text] { font-size: 1.3em; letter-spacing: 0.05em; }
+.ok-scan { background: var(--vert); border-color: var(--vert); color: #fff; }

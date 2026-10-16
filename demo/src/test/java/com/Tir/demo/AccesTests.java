@@ -605,11 +605,51 @@ class AccesTests {
                 .andExpect(redirectedUrl("/armes"));
     }
 
+    @Test
+    @WithUserDetails("tireur1")
+    void laMoyenneParPeriodeAvecSaCible() throws Exception {
+        java.time.LocalDate jour = java.time.LocalDate.now();
+        int t1 = idDe("tireur1");
+        // Aujourd'hui : 100 ; plus tôt ce mois-ci (ou le mois passé) : 50 ; il y a deux ans : 0.
+        donnees.resultats.add(new Resultat(700, t1, 0, jour.toString(), "Fas 90", false, false, List.of("10>H", "10")));
+        donnees.resultats.add(new Resultat(701, t1, 0, jour.minusYears(2).toString(), "Fas 90", false, false, List.of("0", "M")));
+        donnees.resultats.add(new Resultat(702, idDe("tireur2"), 0, jour.toString(), "Fas 90", false, false, List.of("1")));
+
+        mvc.perform(get("/resultats")).andExpect(content().string(containsString("href=\"/resultats/moyenne\"")));
+        // Depuis toujours : (100 + 0) / 2 = 50, avec les 4 coups réunis sur la cible. Le tir de Marie n'y est pas.
+        mvc.perform(get("/resultats/moyenne"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*Depuis toujours</span>\\s*<strong>50[.,]0</strong>.*")))
+                .andExpect(content().string(containsString("data-coups=\"10&gt;H 10 0 M\"")))
+                .andExpect(content().string(containsString("data-groupe")));
+        // Aujourd'hui : seulement le tir du jour.
+        mvc.perform(get("/resultats/moyenne").param("periode", "jour"))
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*Aujourd&#39;hui</span>\\s*<strong>100[.,]0</strong>.*")))
+                .andExpect(content().string(containsString("data-coups=\"10&gt;H 10\"")));
+        // Une période inconnue revient à « depuis toujours ».
+        mvc.perform(get("/resultats/moyenne").param("periode", "n'importe")).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithUserDetails("tireur1")
+    void onPeutLireSaFeuilleEnPhoto() throws Exception {
+        armeDe("tireur1", "Fas 90", "");
+        mvc.perform(get("/resultats/ajouter"))
+                .andExpect(content().string(containsString("Lire ma feuille (photo)")))
+                .andExpect(content().string(containsString("capture=\"environment\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.matchesPattern("(?s).*ocr\\\\?/tesseract\\.min-[0-9a-f]{32}\\.js.*")));
+        // La bibliothèque de lecture est servie par l'application elle-même.
+        for (String fichier : new String[] {"/scan.js", "/ocr/tesseract.min.js", "/ocr/worker.min.js",
+                "/ocr/tesseract-core-lstm.wasm.js", "/ocr/tesseract-core-simd-lstm.wasm.js", "/ocr/eng.traineddata.gz"}) {
+            mvc.perform(get(fichier)).andExpect(status().isOk());
+        }
+    }
+
     private static final String[] PAGES = {
             "/", "/profil", "/profil/modifier",
             "/armes", "/armes/ajouter", "/armes/600/modifier",
             "/licences", "/licences/ajouter", "/licences/601/modifier",
-            "/resultats", "/resultats/ajouter", "/resultats/603", "/resultats/603/modifier",
+            "/resultats", "/resultats/ajouter", "/resultats/603", "/resultats/603/modifier", "/resultats/moyenne",
             "/saisons", "/categories", "/classement", "/annonces", "/calendrier",
     };
 

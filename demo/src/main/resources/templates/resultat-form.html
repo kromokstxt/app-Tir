@@ -6,6 +6,7 @@
     <link rel="stylesheet" th:href="@{/style.css}">
     <title>Entrer un tir</title>
     <script th:src="@{/cible.js}"></script>
+    <script th:src="@{/scan.js}"></script>
 </head>
 <body>
 
@@ -51,6 +52,26 @@
             </button>
         </div>
         <p class="aide" id="aide-profond" hidden>Coups profonds : tapez la valeur sur 100 (100 = plein centre), les points sont calculés. Pas besoin de OK, sauf pour 1 à 10.</p>
+
+        <!-- Lire la feuille de résultat avec l'appareil photo. Le téléphone lit lui-même la photo,
+             puis on vérifie ce qui a été lu avant de l'utiliser. -->
+        <label class="bouton bouton-photo">
+            <svg th:replace="~{fragments :: icone('scanner')}"></svg> Lire ma feuille (photo)
+            <input type="file" accept="image/*" capture="environment" id="photo-feuille" hidden
+                   onchange="lireFeuillePhoto(this)">
+        </label>
+        <div id="scan" class="scan" hidden>
+            <img id="scan-photo" alt="Photo de la feuille">
+            <p id="scan-statut" class="etape"></p>
+            <p class="aide">Conseil : photo bien droite, de près, le ticket blanc entier dans l'image. Les flèches ne sont pas lues sur la photo.</p>
+            <div id="scan-verifier" hidden>
+                <label>Coups lus (un espace entre chaque coup, M = manqué) :
+                    <input type="text" id="scan-coups" inputmode="text" autocomplete="off">
+                </label>
+                <button type="button" class="ok-scan" onclick="utiliserScan()">Utiliser ces coups</button>
+                <button type="button" onclick="fermerScan()">Annuler</button>
+            </div>
+        </div>
 
         <h3>Les coups</h3>
         <p class="etape" id="consigne"></p>
@@ -122,7 +143,7 @@
 
     <a th:href="@{/resultats}" class="bouton">← Résultats</a>
 
-    <script>
+    <script th:inline="javascript">
         // Saisie d'un coup :
         // - sans coups profonds : on touche les points ;
         // - avec coups profonds : on tape le coup profond puis OK (les points en sont déduits).
@@ -294,6 +315,77 @@
                 ol.appendChild(li);
             });
             Cible.dessiner(document.getElementById('apercu'), liste);
+        }
+
+        // ---- Lecture de la feuille en photo ----
+        const CHEMINS = {
+            tesseract: /*[[@{/ocr/tesseract.min.js}]]*/ '/ocr/tesseract.min.js',
+            worker: /*[[@{/ocr/worker.min.js}]]*/ '/ocr/worker.min.js',
+            core: /*[[@{/ocr/}]]*/ '/ocr/',
+            langues: /*[[@{/ocr}]]*/ '/ocr'
+        };
+
+        function statutScan(texte) {
+            document.getElementById('scan-statut').textContent = texte;
+        }
+
+        function fermerScan() {
+            document.getElementById('scan').hidden = true;
+        }
+
+        async function lireFeuillePhoto(input) {
+            const fichier = input.files[0];
+            input.value = '';
+            if (!fichier) return;
+            document.getElementById('scan').hidden = false;
+            document.getElementById('scan-verifier').hidden = true;
+            document.getElementById('scan-photo').src = URL.createObjectURL(fichier);
+            statutScan('Lecture de la feuille… (la première fois, cela peut prendre un moment)');
+            try {
+                const texte = await Scan.lirePhoto(fichier, CHEMINS, function (pourcent) {
+                    statutScan('Lecture de la feuille… ' + pourcent + ' %');
+                });
+                // Pas encore de coup : on choisit tout seul « Coups profonds » si la feuille en a.
+                if (coups().length === 0 && enCours === null) {
+                    document.getElementById('avec-profond').value = String(Scan.aDesCoupsProfonds(texte));
+                    majEtape();
+                }
+                const valeurs = Scan.lireFeuille(texte, avecProfond());
+                document.getElementById('scan-coups').value = valeurs.join(' ');
+                document.getElementById('scan-verifier').hidden = false;
+                const douteux = Scan.aVerifier(valeurs, avecProfond());
+                statutScan(valeurs.length > 0
+                    ? valeurs.length + ' coups lus. Comparez avec votre feuille, corrigez si besoin, puis touchez « Utiliser ces coups ».'
+                      + (douteux.length > 0 ? ' À vérifier surtout : ' + douteux.map(function (n) {
+                            return 'coup ' + n + ' (' + valeurs[n - 1] + ')';
+                        }).join(', ') + '.' : '')
+                    : 'Aucun coup lu. Reprenez la photo de près, bien à plat et sans reflet, ou entrez les coups à la main.');
+            } catch (e) {
+                statutScan('La lecture n\'a pas marché. Réessayez, ou entrez les coups à la main.');
+            }
+        }
+
+        // Les coups vérifiés remplacent ceux de la feuille en cours.
+        function utiliserScan() {
+            const valeurs = document.getElementById('scan-coups').value.trim().split(/[\s,;]+/).filter(Boolean);
+            const textes = [];
+            for (const v of valeurs) {
+                if (/^m$/i.test(v)) { textes.push('M'); continue; }
+                const n = Number(v);
+                const max = avecProfond() ? 100 : 10;
+                if (!/^\d+$/.test(v) || n > max) {
+                    alert('« ' + v + ' » n\'est pas un coup valable (0 à ' + max + ', ou M).');
+                    return;
+                }
+                textes.push(avecProfond() ? Cible.pointsDepuisProfond(n) + ':' + n : String(n));
+            }
+            if (textes.length === 0) return;
+            if ((coups().length > 0 || enCours !== null) && !confirm('Remplacer les coups déjà entrés ?')) return;
+            champ.value = textes.join(' ');
+            enCours = null;
+            profond = '';
+            fermerScan();
+            majEtape();
         }
 
         // Si quelque chose ne marche pas (par ex. une vieille copie du script), on le dit.

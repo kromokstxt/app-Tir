@@ -10,7 +10,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 
 // « Entrer un tir » et « Mes résultats ». Un tireur ne voit que ses tirs, l'admin voit tout.
@@ -37,6 +42,45 @@ public class ResultatController {
         model.addAttribute("resultats", resultats);
         model.addAttribute("moyenne", resultats.stream().mapToDouble(Resultat::getNoteSur100).average().orElse(-1));
         return "resultats";
+    }
+
+    // Une période pour la moyenne : son nom dans l'adresse, son titre, sa moyenne et son nombre de tirs.
+    public record Periode(String code, String titre, double moyenne, int nombreDeTirs, boolean choisie) {}
+
+    // La moyenne sur 100 d'aujourd'hui, du mois, de l'année et depuis toujours,
+    // avec tous les coups de la période choisie réunis sur une seule cible.
+    @GetMapping("/moyenne")
+    public String moyenne(@RequestParam(defaultValue = "tout") String periode, Model model) {
+        String aujourdhui = LocalDate.now().toString();
+        // Les dates sont au format 2026-10-16 : « ce mois » = commence par 2026-10, « cette année » = par 2026.
+        Map<String, String> debuts = new LinkedHashMap<>();
+        debuts.put("jour", aujourdhui);
+        debuts.put("mois", aujourdhui.substring(0, 7));
+        debuts.put("annee", aujourdhui.substring(0, 4));
+        debuts.put("tout", "");
+        Map<String, String> titres = Map.of("jour", "Aujourd'hui", "mois", "Ce mois", "annee", "Cette année", "tout", "Depuis toujours");
+        if (!debuts.containsKey(periode)) {
+            periode = "tout";
+        }
+
+        List<Resultat> visibles = donnees.resultats.stream().filter(r -> acces.peutVoir(r.getTireurId())).toList();
+        List<Periode> periodes = new ArrayList<>();
+        List<Resultat> choisis = List.of();
+        for (Map.Entry<String, String> debut : debuts.entrySet()) {
+            List<Resultat> tirs = visibles.stream().filter(r -> r.getDate().startsWith(debut.getValue())).toList();
+            boolean choisie = debut.getKey().equals(periode);
+            if (choisie) {
+                choisis = tirs;
+            }
+            periodes.add(new Periode(debut.getKey(), titres.get(debut.getKey()),
+                    tirs.stream().mapToDouble(Resultat::getNoteSur100).average().orElse(-1), tirs.size(), choisie));
+        }
+        model.addAttribute("periodes", periodes);
+        model.addAttribute("periodeChoisie", periodes.stream().filter(Periode::choisie).findFirst().orElseThrow());
+        // Tous les coups de la période, pour les montrer ensemble sur la cible.
+        model.addAttribute("tousLesCoups", choisis.stream().map(Resultat::getCoupsTexte).collect(Collectors.joining(" ")));
+        model.addAttribute("nombreDeCoups", choisis.stream().mapToInt(r -> r.getCoups().size()).sum());
+        return "moyenne";
     }
 
     @GetMapping("/ajouter")
