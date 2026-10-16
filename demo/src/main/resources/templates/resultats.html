@@ -15,11 +15,13 @@
 
     <a th:href="@{/resultats/ajouter}" class="bouton principal"><svg th:replace="~{fragments :: icone('cible')}"></svg> Entrer un tir</a>
 
-    <div class="moyenne" th:if="${moyenne >= 0}">
+    <!-- Toucher la moyenne : la cible de tous les coups, par jour, mois, année ou depuis toujours. -->
+    <a th:href="@{/resultats/moyenne}" class="moyenne lien-moyenne" th:if="${moyenne >= 0}">
         <span th:text="${admin} ? 'Moyenne de tous les tirs' : 'Ma moyenne'">Ma moyenne</span>
         <strong th:text="${#numbers.formatDecimal(moyenne, 1, 1)} + ' / 100'"></strong>
         <span th:text="'sur ' + ${#lists.size(resultats)} + (${#lists.size(resultats)} > 1 ? ' tirs' : ' tir')"></span>
-    </div>
+        <span class="voir">Voir sur la cible ›</span>
+    </a>
     <p class="info" th:if="${#lists.isEmpty(resultats)}">Pas encore de tir. Touchez « Entrer un tir » pour commencer.</p>
 
     <ul>

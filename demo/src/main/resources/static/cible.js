@@ -62,7 +62,9 @@
         return Math.min(max - 0.5, Math.max(min + 0.5, 100 - coup.profond));
     }
 
-    function dessiner(conteneur, coups) {
+    // options.groupe : beaucoup de coups ensemble (moyenne), en petits points sans numéro.
+    function dessiner(conteneur, coups, options) {
+        const groupe = options && options.groupe;
         conteneur.innerHTML = '';
         const svg = el('svg', { viewBox: '-115 -115 230 230', role: 'img', 'aria-label': 'Cible' }, conteneur);
         el('rect', { x: -115, y: -115, width: 230, height: 230, fill: '#fff' }, svg);
@@ -97,7 +99,8 @@
             const x = (r * Math.cos(a)).toFixed(1), y = (r * Math.sin(a)).toFixed(1);
             const g = el('g', { class: 'coup' }, svg);
             el('title', {}, g).textContent = `Coup ${i + 1} : ${decrire(coup)}`;
-            el('circle', { cx: x, cy: y, r: 3.2, fill: '#e8312a', stroke: '#fff', 'stroke-width': 0.5 }, g);
+            el('circle', { cx: x, cy: y, r: groupe ? 2.2 : 3.2, fill: '#e8312a', stroke: '#fff', 'stroke-width': groupe ? 0.4 : 0.5 }, g);
+            if (groupe) return;
             const t = el('text', {
                 x, y, fill: '#fff', 'font-size': 3.2,
                 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-family': 'Arial, sans-serif'
@@ -166,7 +169,7 @@
     // Toutes les cibles de la page : <div data-cible data-coups="10>H 9:87>BG M">.
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-cible]').forEach(c => {
-            const svg = dessiner(c, lireCoups(c.dataset.coups || ''));
+            const svg = dessiner(c, lireCoups(c.dataset.coups || ''), { groupe: c.hasAttribute('data-groupe') });
             if (c.hasAttribute('data-zoom')) c.zoom = rendreZoomable(svg);
         });
     });

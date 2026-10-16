@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <title>Moyenne</title>
+    <script th:src="@{/cible.js}"></script>
+</head>
+<body>
+
+    <div th:replace="~{fragments :: entete}"></div>
+
+    <h2><svg th:replace="~{fragments :: icone('resultats')}"></svg>
+        <span th:text="${admin} ? 'Moyenne de tous les tirs' : 'Ma moyenne'">Ma moyenne</span></h2>
+
+    <!-- Les quatre périodes : on touche pour changer. -->
+    <nav class="periodes">
+        <a th:each="p : ${periodes}" th:href="@{/resultats/moyenne(periode=${p.code})}"
+           class="periode" th:classappend="${p.choisie} ? ' choisie'">
+            <span th:text="${p.titre}">Aujourd'hui</span>
+            <strong th:text="${p.moyenne >= 0} ? ${#numbers.formatDecimal(p.moyenne, 1, 1)} : '—'">—</strong>
+            <small th:text="${p.nombreDeTirs} + (${p.nombreDeTirs} > 1 ? ' tirs' : ' tir')"></small>
+        </a>
+    </nav>
+
+    <div class="moyenne" th:if="${periodeChoisie.moyenne >= 0}">
+        <span th:text="${periodeChoisie.titre}">Depuis toujours</span>
+        <strong th:text="${#numbers.formatDecimal(periodeChoisie.moyenne, 1, 1)} + ' / 100'"></strong>
+        <span th:text="${nombreDeCoups} + ' coups'"></span>
+    </div>
+    <p class="info" th:if="${periodeChoisie.moyenne < 0}">Pas de tir pour cette période.</p>
+
+    <p>
+        <button type="button" onclick="cibleMoyenne.zoom.zoomer(0.7)">+ Zoom</button>
+        <button type="button" onclick="cibleMoyenne.zoom.zoomer(1.4)">− Zoom</button>
+        <button type="button" onclick="cibleMoyenne.zoom.recentrer()">Tout voir</button>
+    </p>
+    <div id="cibleMoyenne" class="cible cible-grande" data-cible data-zoom data-groupe
+         th:attr="data-coups=${tousLesCoups}"></div>
+
+    <a th:href="@{/resultats}" class="bouton"><svg th:replace="~{fragments :: icone('resultats')}"></svg> Mes résultats</a>
+
+</body>
+</html>
